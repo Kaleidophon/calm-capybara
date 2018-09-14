@@ -4,6 +4,7 @@ import nltk
 from collections import Counter, defaultdict
 from sklearn.feature_extraction.text import TfidfTransformer
 import numpy as np
+from scipy.sparse import csr_matrix
 
 TEXT_EXT = '.text'
 LABELS_EXT = '.labels'
@@ -49,7 +50,7 @@ class TweetsBaseDataset(data.Dataset):
                 self.labels[i] = int(line)
 
     def __getitem__(self, index):
-        pass
+        raise NotImplementedError
 
     def __len__(self):
         return self.length
@@ -74,14 +75,17 @@ class TweetsBOWDataset(TweetsBaseDataset):
         TweetsBaseDataset.__init__(self, path, prefix, vocab_size)
 
         # Using the vocabulary, build count matrix from text
-        counts = np.zeros((self.length, len(self.vocabulary)), dtype=np.int)
+        self.counts = np.zeros((self.length, len(self.vocabulary)), dtype=np.int)
         with open(os.path.join(path, prefix + TEXT_EXT)) as file:
             for i, line in enumerate(file):
-                tokens = [self.vocabulary[token] for token in self.process_tweet(line)]
-                counts[i, tokens] += 1
+                # Count words in processed tweet
+                token_counter = Counter(self.process_tweet(line))
+                tokens, counts = zip(*token_counter.items())
+                token_idx = [self.vocabulary[token] for token in tokens]
+                self.counts[i, token_idx] = counts
 
         # Add tf-idf weighting
-        self.data = TfidfTransformer().fit_transform(counts)
+        self.data = TfidfTransformer().fit_transform(self.counts)
 
 if __name__ == '__main__':
     ds = TweetsBOWDataset('data/dev', 'test_trial')
