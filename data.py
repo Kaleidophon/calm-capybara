@@ -2,6 +2,7 @@ from torch.utils import data
 import os
 import nltk
 from collections import Counter, defaultdict
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 TEXT_EXT = '.text'
 LABELS_EXT = '.labels'
@@ -9,20 +10,24 @@ UNK_SYMBOL = "<UNK>"
 PAD_SYMBOL = "<PAD>"
 
 class TweetsBaseDataset(data.Dataset):
-    """ A Dataset class for the emoji prediction task
+    """ A Dataset class for the emoji prediction task. The base class reads
+    the file to prepare a vocabulary that is then used for specialized
+    subclasses.
     Args:
         - path (str): path to folder containing files
         - prefix (str): prefix of text and label files to load
         - vocab_size (int): maximum number of unique words to index
     """
-    def __init__(self, path, prefix, vocab_size=100):
+    def __init__(self, path, prefix, vocab_size=10000):
         self.prefix = prefix
         token_counts = Counter()
         processed_tweets = []
+        self.length = 0
 
         # Open text file with tweets
         with open(os.path.join(path, prefix + TEXT_EXT)) as file:
             for i, line in enumerate(file):
+                self.length += 1
                 # Tokenize and process line
                 tokens = self.process_tweet(line)
                 token_counts.update(tokens)
@@ -38,6 +43,9 @@ class TweetsBaseDataset(data.Dataset):
 
     def __getitem__(self, index):
         pass
+
+    def __len__(self):
+        return self.length
 
     def process_tweet(self, text):
         """ Process and tokenize a tweet.
