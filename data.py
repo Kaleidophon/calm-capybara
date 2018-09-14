@@ -2,7 +2,8 @@ from torch.utils import data
 import os
 import nltk
 from collections import Counter, defaultdict
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+import numpy as np
 
 TEXT_EXT = '.text'
 LABELS_EXT = '.labels'
@@ -55,6 +56,26 @@ class TweetsBaseDataset(data.Dataset):
         """
         return nltk.word_tokenize(text)
 
+class TweetsBOWDataset(TweetsBaseDataset):
+    """ A Dataset class for the emoji prediction task that stores tweets as
+        bag of words.
+    Args:
+        - path (str): path to folder containing files
+        - prefix (str): prefix of text and label files to load
+        - vocab_size (int): maximum number of unique words to index
+    """
+    def __init__(self, path, prefix, vocab_size=10000):
+        TweetsBaseDataset.__init__(self, path, prefix, vocab_size)
+
+        # Using the vocabulary, build count matrix from text
+        counts = np.zeros((self.length, len(self.vocabulary)), dtype=np.int)
+        with open(os.path.join(path, prefix + TEXT_EXT)) as file:
+            for i, line in enumerate(file):
+                tokens = [self.vocabulary[token] for token in self.process_tweet(line)]
+                counts[i, tokens] += 1
+
+        # Add tf-idf weighting
+        self.data = TfidfTransformer().fit_transform(counts)
 
 if __name__ == '__main__':
-    ds = TweetsBaseDataset('data/dev', 'es_trial')
+    ds = TweetsBOWDataset('data/dev', 'es_trial')
