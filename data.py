@@ -42,6 +42,12 @@ class TweetsBaseDataset(data.Dataset):
             _ = self.vocabulary[token]
         self.vocabulary.default_factory = lambda: unk_idx
 
+        # Load labels
+        self.labels = np.empty(self.length, dtype=np.int)
+        with open(os.path.join(path, prefix + LABELS_EXT)) as file:
+            for i, line in enumerate(file):
+                self.labels[i] = int(line)
+
     def __getitem__(self, index):
         pass
 
@@ -78,4 +84,4 @@ class TweetsBOWDataset(TweetsBaseDataset):
         self.data = TfidfTransformer().fit_transform(counts)
 
 if __name__ == '__main__':
-    ds = TweetsBOWDataset('data/dev', 'es_trial')
+    ds = TweetsBOWDataset('data/dev', 'test_trial')
