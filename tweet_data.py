@@ -1,6 +1,6 @@
 import torch
 from torch.utils import data
-from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
+from torch.nn.utils.rnn import pad_sequence
 import os
 import nltk
 from collections import Counter, defaultdict
@@ -87,7 +87,7 @@ class TweetsBaseDataset(data.Dataset):
             - data_list (list): contains tuples, each with two tensors
                 as returned by __getitem__() in the Dataset class.
         Returns:
-            - packed_data (PackedSequence): packed sequences forming a batch
+            - packed_data (tensor): padded sequences forming a batch
             - labels (tensor): batch of labels
         """
         # Separate token indices and labels
@@ -101,10 +101,9 @@ class TweetsBaseDataset(data.Dataset):
         sorted_labels = torch.stack([labels[idx] for idx in sorted_idx])
         sorted_lengths = lengths[sorted_idx]
 
-        # Create padded batch using pad_sequence
+        # Create padded batch
         padded_data = pad_sequence(sorted_data, batch_first)
 
-        # Create PackedSequence using pack_padded_sequence
         return padded_data, sorted_labels, sorted_lengths
 
 class TweetsBOWDataset(TweetsBaseDataset):
