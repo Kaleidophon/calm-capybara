@@ -1,5 +1,6 @@
 import torch
 from torch.utils import data
+from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
 import os
 import nltk
 from collections import Counter, defaultdict
@@ -78,6 +79,35 @@ class TweetsBaseDataset(data.Dataset):
         # More operations can be added here before returning list of tokens
         return nltk.word_tokenize(text)
 
+    @staticmethod
+    def collate_fn(data_list, batch_first=False):
+        """
+        Prepare a batch from a list of samples.
+        Args:
+            - data_list (list): contains tuples, each with two tensors
+                as returned by __getitem__() in the Dataset class.
+        Returns:
+            - packed_data (PackedSequence): packed sequences forming a batch
+            - labels (tensor): batch of labels
+        """
+        # Separate token indices and labels
+        data, labels = zip(*data_list)
+
+        # Get length of each tensor
+        lengths = np.array([len(tensor) for tensor in data])
+        # Sort tensors from longest to shortest
+        sorted_idx = np.argsort(lengths)[::-1]
+        sorted_data = [data[idx] for idx in sorted_idx]
+        sorted_labels = torch.stack([labels[idx] for idx in sorted_idx])
+        sorted_lengths = lengths[sorted_idx]
+
+        # Create padded batch using pad_sequence
+        padded_data = pad_sequence(sorted_data, batch_first)
+        # Pack for use in recurrent models
+        packed_data = pack_padded_sequence(padded_data, sorted_lengths, batch_first)
+
+        # Create PackedSequence using pack_padded_sequence
+        return packed_data, sorted_labels
 
 class TweetsBOWDataset(TweetsBaseDataset):
     """ A Dataset class for the emoji prediction task that stores tweets as
