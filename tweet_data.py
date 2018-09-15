@@ -36,6 +36,9 @@ class TweetsBaseDataset(data.Dataset):
                 token_counts.update(tokens)
                 processed_tweets.append(tokens)
 
+        print('Read file with {:d} tweets, {:d} unique tokens'.format(
+            self.length, len(token_counts)))
+
         # Build vocabulary
         print('Building vocabulary...')
         vocabulary = defaultdict(lambda: len(vocabulary))
