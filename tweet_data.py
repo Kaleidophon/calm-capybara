@@ -1,3 +1,4 @@
+import torch
 from torch.utils import data
 import os
 import nltk
@@ -27,7 +28,7 @@ class TweetsBaseDataset(data.Dataset):
         self.length = 0
 
         # Open text file with tweets
-        print('Reading file...')
+        print('Reading file')
         with open(os.path.join(path, prefix + TEXT_EXT)) as file:
             for i, line in enumerate(file):
                 self.length += 1
@@ -40,7 +41,7 @@ class TweetsBaseDataset(data.Dataset):
             self.length, len(token_counts)))
 
         # Build vocabulary
-        print('Building vocabulary...')
+        print('Building vocabulary')
         vocabulary = defaultdict(lambda: len(vocabulary))
         _ = vocabulary[PAD_SYMBOL]
         unk_idx = vocabulary[UNK_SYMBOL]
@@ -55,14 +56,15 @@ class TweetsBaseDataset(data.Dataset):
                 list(map(lambda x: self.vocabulary.get(x, unk_idx), tweet)))
 
         # Load labels
-        print('Loading labels...')
+        print('Loading labels')
         self.labels = np.empty(self.length, dtype=np.int)
         with open(os.path.join(path, prefix + LABELS_EXT)) as file:
             for i, line in enumerate(file):
                 self.labels[i] = int(line)
 
     def __getitem__(self, index):
-        raise NotImplementedError
+        return (torch.tensor(self.text_ids[index], dtype=torch.long),
+                torch.tensor(self.labels[index], dtype=torch.long))
 
     def __len__(self):
         return self.length
@@ -76,6 +78,7 @@ class TweetsBaseDataset(data.Dataset):
         # More operations can be added here before returning list of tokens
         return nltk.word_tokenize(text)
 
+
 class TweetsBOWDataset(TweetsBaseDataset):
     """ A Dataset class for the emoji prediction task that stores tweets as
         bag of words.
@@ -88,7 +91,7 @@ class TweetsBOWDataset(TweetsBaseDataset):
         TweetsBaseDataset.__init__(self, path, prefix, vocab_size)
 
         # Using the vocabulary, build count matrix from text ids
-        print('Loading counts matrix...')
+        print('Loading counts matrix')
         count_matrix = lil_matrix((self.length, len(self.vocabulary)),
                                   dtype=np.int)
         for i, token_ids in enumerate(self.text_ids):
@@ -98,7 +101,7 @@ class TweetsBOWDataset(TweetsBaseDataset):
             count_matrix[i, token_ids] = counts
 
         # Add tf-idf weighting
-        print('Creating TF-ID matrix...')
+        print('Creating TF-ID matrix')
         self.data = TfidfTransformer().fit_transform(count_matrix)
 
 if __name__ == '__main__':
