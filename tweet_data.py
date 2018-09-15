@@ -103,11 +103,9 @@ class TweetsBaseDataset(data.Dataset):
 
         # Create padded batch using pad_sequence
         padded_data = pad_sequence(sorted_data, batch_first)
-        # Pack for use in recurrent models
-        packed_data = pack_padded_sequence(padded_data, sorted_lengths, batch_first)
 
         # Create PackedSequence using pack_padded_sequence
-        return packed_data, sorted_labels
+        return padded_data, sorted_labels, sorted_lengths
 
 class TweetsBOWDataset(TweetsBaseDataset):
     """ A Dataset class for the emoji prediction task that stores tweets as
