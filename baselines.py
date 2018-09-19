@@ -2,18 +2,24 @@
 Module that defines some baseline models for the emoji prediction task.
 """
 
+# STD
+import itertools
+import operator
+import functools
+
 # EXT
 from sklearn import linear_model
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 # PROJECT
-from tweet_data import TweetsBOWDataset
+from tweet_data import TweetsBOWDataset, TweetsBaseDataset
 
 
 class BoWBaseline:
     """
     Defining the Bag-of-Words baseline, using logistic regression or an SVM in order to predict the target emoji.
     """
+    # TODO: Replace by best-performing hyperparameters
     scikit_models = {
         "logistic_regression": linear_model.LogisticRegression,
         "svm": linear_model.SGDClassifier
@@ -27,7 +33,7 @@ class BoWBaseline:
         },
     }
 
-    def __init__(self, classifier="logistic_regression"):
+    def __init__(self, classifier="logistic_regression", **model_params):
         """
         Initialize the model.
 
@@ -38,7 +44,8 @@ class BoWBaseline:
             " ,".join(list(self.scikit_models.keys()))
         )
 
-        self.model = self.scikit_models[classifier](**self.scikit_params[classifier])
+        model_params = self.scikit_params[classifier] if len(model_params) == 0 else model_params
+        self.model = self.scikit_models[classifier](**model_params)
 
     def train(self, dataset: TweetsBOWDataset):
         """
@@ -55,6 +62,11 @@ class BoWBaseline:
 
         Args:
             - dataset (TweetsBOWDataset): Dataset to evaluate the model on.
+
+        Returns:
+            - precision (float): Precision score.
+            - recall (float): Recall score.
+            - f1 (float): F1 score.
         """
         predictions = self.model.predict(X=dataset.data)
 
@@ -66,13 +78,71 @@ class BoWBaseline:
         return precision, recall, f1
 
 
+def grid_search(model_class, train_set: TweetsBaseDataset, test_set: TweetsBaseDataset, hyperparameter_options: dict):
+    """
+    Perform grid search in order to find the best parameters for a model.
+
+    Args:
+        - model_class (type): Class for which the best hyperparameters should be determined.
+        - train_set (TweetsBaseDataset): Dataset for the model to be trained on.
+        - test_set (TweetsBaseDataset): Dataset for the model to be evaluated on.
+        - hyperparameter_options (dict): Dictionary of hyperparameter to possible options (str -> list).
+    """
+    highest_score = -1
+    best_parameters = None
+    print("Trying to find best model parameters with options: {}".format(str(hyperparameter_options)))
+
+    # Perform grid search
+    n_combinations = functools.reduce(operator.mul, [len(options) for options in hyperparameter_options.values()])
+    for i, hyperparams in enumerate(itertools.product(*hyperparameter_options.values())):
+        current_model_params = dict(zip(hyperparameter_options.keys(), hyperparams))
+
+        print(
+            "\rTrying out combination {}/{}: {}".format(
+                i + 1, n_combinations, str(current_model_params)
+            ), flush=True, end=""
+        )
+
+        current_model = model_class(**current_model_params)
+        current_model.train(train_set)
+        p, r, f1 = current_model.eval(test_set)
+        print("\nPrecision: {:.2f} | Recall: {:.2f} | F1-score: {:.2f}".format(p, r, f1))
+
+        if f1 > highest_score:
+            print("New highest score found ({:.2f})".format(f1))
+            highest_score = f1
+            best_parameters = current_model_params
+
+    return best_parameters
+
+
 if __name__ == "__main__":
     # Load data sets
     english_train = TweetsBOWDataset("data/train", "us_train")
     english_test = TweetsBOWDataset("data/test", "us_test")
 
-    # Train models
-    bow_baseline = BoWBaseline(classifier="svm")
-    bow_baseline.train(english_test)
-    p, r, f1 = bow_baseline.eval(english_test)
-    print("Precision: {:.2f} | Recall: {:.2f} | F1-Score: {:.2f}".format(p, r, f1))
+    model = BoWBaseline(classifier="svm")
+    model.train(english_train)
+
+    # Train models and find best hyperparameters
+    hyperparameter_options_svm = {
+        "classifier": ["svm"],
+        "max_iter": [10],
+        "penalty": ["l2"],
+        "random_state": [42],
+        "alpha": [0.00001, 0.0001, 0.001, 0.01],
+        "tol": [None, 0.0001, 0.001],
+        "loss": ["hinge", "log", "squared_hinge"],
+        "n_jobs": [4]
+    }
+    hyperparameter_options_lr = {
+        "classifier": ["logistic_regression"],
+        "max_iter": [20],
+        "penalty": ["l2"],
+        "random_state": [42],
+        "tol": [0.0001, 0.001, 0.01],
+        "solver": ["liblinear", "saga"],
+        "n_jobs": [1]
+    }
+    grid_search(BoWBaseline, english_train, english_test, hyperparameter_options_svm)
+    grid_search(BoWBaseline, english_train, english_test, hyperparameter_options_lr)
