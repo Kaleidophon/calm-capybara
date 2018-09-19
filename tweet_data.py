@@ -118,6 +118,17 @@ class TweetsBaseDataset(data.Dataset):
 
         return padded_data, sorted_labels, sorted_lengths
 
+    def dump(self, filename):
+        """ Save dataset to disk using the provided file name (str) """
+        joblib.dump(self, filename)
+
+    @staticmethod
+    def load(filename):
+        """ Load a serialized dataset from the provided file name (str).
+        Assumes file is a valid serialized dataset.
+        """
+        return joblib.load(filename)
+
 class TweetsBOWDataset(TweetsBaseDataset):
     """ A Dataset class for the emoji prediction task that stores tweets as
         bag of words.
