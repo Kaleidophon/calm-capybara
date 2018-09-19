@@ -7,6 +7,7 @@ from collections import Counter, defaultdict
 from sklearn.feature_extraction.text import TfidfTransformer
 import numpy as np
 from scipy.sparse import lil_matrix
+from sklearn.externals import joblib
 
 TEXT_EXT = '.text'
 LABELS_EXT = '.labels'
@@ -21,9 +22,12 @@ class TweetsBaseDataset(data.Dataset):
     Args:
         - path (str): path to folder containing files
         - prefix (str): prefix of text and label files to load
-        - vocab_size (int): maximum number of unique words to index
+        - vocab_size (int): maximum number of unique tokens to index
+        - vocabulary (dict): maps tokens (str) to indices (int). If provided
+            it is used instead of building it from the dataset, and
+            vocab_size is ignored.
     """
-    def __init__(self, path, prefix, vocab_size=10000):
+    def __init__(self, path, prefix, vocab_size=10000, vocabulary=None):
         self.prefix = prefix
         token_counts = Counter()
         processed_tweets = []
@@ -36,26 +40,34 @@ class TweetsBaseDataset(data.Dataset):
                 self.length += 1
                 # Tokenize and process line
                 tokens = self.process_tweet(line)
-                token_counts.update(tokens)
                 processed_tweets.append(tokens)
 
-        print('Read file with {:d} tweets, {:d} unique tokens'.format(
-            self.length, len(token_counts)))
+                if vocabulary is None:
+                    token_counts.update(tokens)
+
+        print('Read file with {:d} tweets'.format(self.length))
 
         # Build vocabulary
-        print('Building vocabulary')
-        vocabulary = defaultdict(lambda: len(vocabulary))
-        _ = vocabulary[PAD_SYMBOL]
-        unk_idx = vocabulary[UNK_SYMBOL]
-        for token, _ in token_counts.most_common(vocab_size):
-            _ = vocabulary[token]
+        if vocabulary is None:
+            print('Building vocabulary')
+            vocabulary = defaultdict(lambda: len(vocabulary))
+            _ = vocabulary[PAD_SYMBOL]
+            _ = vocabulary[UNK_SYMBOL]
+            for token, _ in token_counts.most_common(vocab_size):
+                _ = vocabulary[token]
+        else:
+            print('Using vocabulary containing {:d} tokens'.format(
+                len(vocabulary)))
+
+
         self.vocabulary = dict(vocabulary)
 
         # Store text in memory as word ids
         self.text_ids = []
         for tweet in processed_tweets:
-            self.text_ids.append(
-                list(map(lambda x: self.vocabulary.get(x, unk_idx), tweet)))
+            self.text_ids.append(list(map(
+                lambda x: self.vocabulary.get(x, self.vocabulary[UNK_SYMBOL]),
+                tweet)))
 
         # Load labels
         print('Loading labels')
@@ -112,6 +124,17 @@ class TweetsBaseDataset(data.Dataset):
 
         return padded_data, sorted_labels, sorted_lengths
 
+    def dump(self, filename):
+        """ Save dataset to disk using the provided file name (str) """
+        joblib.dump(self, filename)
+
+    @staticmethod
+    def load(filename):
+        """ Load a serialized dataset from the provided file name (str).
+        Assumes file is a valid serialized dataset.
+        """
+        return joblib.load(filename)
+
 
 class TweetsBOWDataset(TweetsBaseDataset):
     """ A Dataset class for the emoji prediction task that stores tweets as
@@ -120,9 +143,12 @@ class TweetsBOWDataset(TweetsBaseDataset):
         - path (str): path to folder containing files
         - prefix (str): prefix of text and label files to load
         - vocab_size (int): maximum number of unique words to index
+        - vocabulary (dict): maps tokens (str) to indices (int). If provided
+            it is used instead of building it from the dataset, and
+            vocab_size is ignored.
     """
-    def __init__(self, path, prefix, vocab_size=10000):
-        TweetsBaseDataset.__init__(self, path, prefix, vocab_size)
+    def __init__(self, path, prefix, vocab_size=10000, vocabulary=None):
+        TweetsBaseDataset.__init__(self, path, prefix, vocab_size, vocabulary)
 
         # Using the vocabulary, build count matrix from text ids
         print('Loading counts matrix')

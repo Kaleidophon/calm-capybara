@@ -19,17 +19,18 @@ class BoWBaseline:
     """
     Defining the Bag-of-Words baseline, using logistic regression or an SVM in order to predict the target emoji.
     """
-    # TODO: Replace by best-performing hyperparameters
     scikit_models = {
         "logistic_regression": linear_model.LogisticRegression,
         "svm": linear_model.SGDClassifier
     }
     scikit_params = {
         "logistic_regression": {
-            "penalty": "l2", "max_iter": 10, "random_state": 42
+            'classifier': 'logistic_regression', 'max_iter': 30, 'penalty': 'l1', 'random_state': 42, 'tol': 0.1,
+            'solver': 'saga'
         },
         "svm": {
-            "loss": "hinge", "penalty": "l2", "alpha": 1e-3, "random_state": 42, "max_iter": 10, "tol": None
+            'classifier': 'svm', 'max_iter': 30, 'penalty': 'l1', 'random_state': 42, 'alpha': 1e-05, 'tol': 0.01,
+            'loss': 'log'
         },
     }
 
@@ -106,41 +107,44 @@ def grid_search(model_class, train_set: TweetsBaseDataset, test_set: TweetsBaseD
         current_model = model_class(**current_model_params)
         current_model.train(train_set)
         p, r, f1 = current_model.eval(test_set)
-        print("\nPrecision: {:.2f} | Recall: {:.2f} | F1-score: {:.2f}".format(p, r, f1))
+        print("\nPrecision: {:.4f} | Recall: {:.4f} | F1-score: {:.4f}".format(p, r, f1))
 
         if f1 > highest_score:
-            print("New highest score found ({:.2f})".format(f1))
+            print("New highest score found ({:.4f})".format(f1))
             highest_score = f1
             best_parameters = current_model_params
 
+    print("Best parameters with a score of {:.4f} where {}".format(highest_score, str(best_parameters)))
     return best_parameters
 
 
 if __name__ == "__main__":
     # Load data sets
-    english_train = TweetsBOWDataset("data/train", "us_train")
-    english_test = TweetsBOWDataset("data/test", "us_test")
+    # english_train = TweetsBOWDataset("data/train", "us_train")
+    # english_train.dump("data/us_train.set")
+    # english_test = TweetsBOWDataset("data/test", "us_test", vocabulary=english_train.vocabulary)
+    # english_test.dump("data/us_test.set")
 
-    model = BoWBaseline(classifier="svm")
-    model.train(english_train)
+    english_train = TweetsBOWDataset.load("data/us_train.set")
+    english_test = TweetsBOWDataset.load("data/us_test.set")
 
     # Train models and find best hyperparameters
     hyperparameter_options_svm = {
         "classifier": ["svm"],
-        "max_iter": [10],
-        "penalty": ["l2"],
+        "max_iter": [30],
+        "penalty": ["l1", "l2"],
         "random_state": [42],
         "alpha": [0.00001, 0.0001, 0.001, 0.01],
-        "tol": [None, 0.0001, 0.001],
+        "tol": [None, 0.0001, 0.001, 0.01],
         "loss": ["hinge", "log", "squared_hinge"],
         "n_jobs": [4]
     }
     hyperparameter_options_lr = {
         "classifier": ["logistic_regression"],
-        "max_iter": [20],
-        "penalty": ["l2"],
+        "max_iter": [30],
+        "penalty": ["l1", "l2"],
         "random_state": [42],
-        "tol": [0.0001, 0.001, 0.01],
+        "tol": [0.0001, 0.001, 0.01, 0.1],
         "solver": ["liblinear", "saga"],
         "n_jobs": [1]
     }
