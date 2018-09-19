@@ -13,6 +13,7 @@ LABELS_EXT = '.labels'
 UNK_SYMBOL = "<UNK>"
 PAD_SYMBOL = "<PAD>"
 
+
 class TweetsBaseDataset(data.Dataset):
     """ A Dataset class for the emoji prediction task. The base class reads
     the file to prepare a vocabulary that is then used for specialized
@@ -29,7 +30,7 @@ class TweetsBaseDataset(data.Dataset):
         self.length = 0
 
         # Open text file with tweets
-        print('Reading file')
+        print('Reading files in directory {}'.format(os.path.join(path, prefix)))
         with open(os.path.join(path, prefix + TEXT_EXT)) as file:
             for i, line in enumerate(file):
                 self.length += 1
@@ -77,7 +78,12 @@ class TweetsBaseDataset(data.Dataset):
         Returns: list, containing tokens after processing
         """
         # More operations can be added here before returning list of tokens
-        return nltk.word_tokenize(text)
+        try:
+            return nltk.word_tokenize(text)
+        except LookupError:
+            # Download tokenization resource if not installed yet
+            nltk.download("punkt")
+            return nltk.word_tokenize(text)
 
     @staticmethod
     def collate_fn(data_list, batch_first=False):
@@ -106,6 +112,7 @@ class TweetsBaseDataset(data.Dataset):
 
         return padded_data, sorted_labels, sorted_lengths
 
+
 class TweetsBOWDataset(TweetsBaseDataset):
     """ A Dataset class for the emoji prediction task that stores tweets as
         bag of words.
@@ -130,6 +137,7 @@ class TweetsBOWDataset(TweetsBaseDataset):
         # Add tf-idf weighting
         print('Creating TF-ID matrix')
         self.data = TfidfTransformer().fit_transform(count_matrix)
+
 
 if __name__ == '__main__':
     ds = TweetsBOWDataset('data/dev', 'us_trial')
