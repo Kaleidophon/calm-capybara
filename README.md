@@ -30,3 +30,9 @@ on the test set.
 ### Usage
 
 [TODO. Explain how to use the whole thing]
+
+To get the dependencies, run
+
+```sh
+pip install -r requirements.txt
+```

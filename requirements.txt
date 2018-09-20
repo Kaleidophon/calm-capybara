@@ -6,3 +6,9 @@ scikit-learn==0.19.1
 scipy==1.1.0
 torch==0.4.1
 torchvision==0.2.1
+ekphrasis==0.4.10
+ftfy==5.5.0
+ujson==1.35
+colorama==0.3.9
+termcolor==1.1.0
+
