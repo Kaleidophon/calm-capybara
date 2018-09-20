@@ -26,7 +26,13 @@ def get_embeddings(filename, vocabulary, dim=300):
             if word in vocabulary:
                 words_found += 1
                 word_idx = vocabulary[word]
-                embeddings[word_idx] = np.array(values[1:]).astype(np.float)
+                embedding = np.array(values[1:]).astype(np.float)
+                try:
+                    embeddings[word_idx] = embedding
+                except ValueError:
+                    raise ValueError(
+                        'Read embedding of length {:d}, expected {:d}'.format(
+                        len(embedding), dim))
 
     print('Loaded {:d} embeddings out of {:d} words in vocabulary'.format(
         words_found, len(vocabulary)))
