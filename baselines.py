@@ -24,14 +24,19 @@ class BoWBaseline:
         "svm": linear_model.SGDClassifier
     }
     scikit_params = {
+        # Best logistic regression parameters found
+        # Dev set: Precision: 0.2995 | Recall: 0.2869 | F1 - score: 0.2755
+        # Test set: Precision: 0.3281 | Recall: 0.2972 | F1 - score: 0.3018
         "logistic_regression": {
-            'classifier': 'logistic_regression', 'max_iter': 30, 'penalty': 'l1', 'random_state': 42, 'tol': 0.1,
-            'solver': 'saga'
+            'max_iter': 30, 'penalty': 'l1', 'random_state': 42, 'tol': 0.1, 'solver': 'saga'
         },
+
+        # Best SVM parameters found
+        # Dev set:  Precision: 0.2396 | Recall: 0.2623 | F1 - score: 0.2428
+        # Test set: Precision: 0.2482 | Recall: 0.2520 | F1 - score: 0.2424
         "svm": {
-            'classifier': 'svm', 'max_iter': 30, 'penalty': 'l1', 'random_state': 42, 'alpha': 1e-05, 'tol': 0.01,
-            'loss': 'log'
-        },
+            'max_iter': 30, 'penalty': 'l2', 'random_state': 42, 'alpha': 0.0001, 'tol': 0.0001, 'loss': 'hinge'
+        }
     }
 
     def __init__(self, classifier="logistic_regression", **model_params):
@@ -79,17 +84,27 @@ class BoWBaseline:
         return precision, recall, f1
 
 
-def grid_search(model_class, train_set: TweetsBaseDataset, test_set: TweetsBaseDataset, hyperparameter_options: dict):
+def grid_search(model_class, train_set: TweetsBaseDataset, dev_set: TweetsBaseDataset, test_set: TweetsBaseDataset,
+                hyperparameter_options: dict):
     """
     Perform grid search in order to find the best parameters for a model.
 
     Args:
         - model_class (type): Class for which the best hyperparameters should be determined.
         - train_set (TweetsBaseDataset): Dataset for the model to be trained on.
+        - dev_set (TweetsBaseDataset): Dataset for the model's hyperparameters to be tuned on.
         - test_set (TweetsBaseDataset): Dataset for the model to be evaluated on.
         - hyperparameter_options (dict): Dictionary of hyperparameter to possible options (str -> list).
+    Returns:
+        - best_parameters (dict): Dictionary of best parameters found.
     """
+    def _train_and_eval(model_params, data_set):
+        current_model = model_class(**model_params)
+        current_model.train(train_set)
+        return current_model.eval(data_set)
+
     highest_score = -1
+    p_best, r_best = 0, 0
     best_parameters = None
     print("Trying to find best model parameters with options: {}".format(str(hyperparameter_options)))
 
@@ -104,17 +119,23 @@ def grid_search(model_class, train_set: TweetsBaseDataset, test_set: TweetsBaseD
             ), flush=True, end=""
         )
 
-        current_model = model_class(**current_model_params)
-        current_model.train(train_set)
-        p, r, f1 = current_model.eval(test_set)
+        p, r, f1 = _train_and_eval(current_model_params, dev_set)
         print("\nPrecision: {:.4f} | Recall: {:.4f} | F1-score: {:.4f}".format(p, r, f1))
 
         if f1 > highest_score:
             print("New highest score found ({:.4f})".format(f1))
-            highest_score = f1
+            p_best, r_best, highest_score = p, r, f1
             best_parameters = current_model_params
 
-    print("Best parameters with a score of {:.4f} where {}".format(highest_score, str(best_parameters)))
+    # Obtain test set performance for best params
+    p_test, r_test, f1_test = _train_and_eval(best_parameters, test_set)
+
+    print("Found best parameters")
+    print(str(best_parameters))
+    print("achieving the following performances:")
+    print("Dev set: Precision: {:.4f} | Recall: {:.4f} | F1-score: {:.4f}".format(p_best, r_best, highest_score))
+    print("Test set: Precision: {:.4f} | Recall: {:.4f} | F1-score: {:.4f}\n".format(p_test, r_test, f1_test))
+
     return best_parameters
 
 
@@ -124,8 +145,11 @@ if __name__ == "__main__":
     # english_train.dump("data/us_train.set")
     # english_test = TweetsBOWDataset("data/test", "us_test", vocabulary=english_train.vocabulary)
     # english_test.dump("data/us_test.set")
+    # english_dev = TweetsBOWDataset("data/dev", "us_trial", vocabulary=english_train.vocabulary)
+    # english_dev.dump("data/us_dev.set")
 
     english_train = TweetsBOWDataset.load("data/us_train.set")
+    english_dev = TweetsBaseDataset.load("data/us_dev.set")
     english_test = TweetsBOWDataset.load("data/us_test.set")
 
     # Train models and find best hyperparameters
@@ -146,7 +170,7 @@ if __name__ == "__main__":
         "random_state": [42],
         "tol": [0.0001, 0.001, 0.01, 0.1],
         "solver": ["liblinear", "saga"],
-        "n_jobs": [1]
+        "n_jobs": [4]
     }
-    grid_search(BoWBaseline, english_train, english_test, hyperparameter_options_svm)
-    grid_search(BoWBaseline, english_train, english_test, hyperparameter_options_lr)
+    grid_search(BoWBaseline, english_train, english_dev, english_test, hyperparameter_options_svm)
+    grid_search(BoWBaseline, english_train, english_dev, english_test, hyperparameter_options_lr)
