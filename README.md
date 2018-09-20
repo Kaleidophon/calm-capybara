@@ -29,3 +29,9 @@ The results are split up for the english and the spanish part of the dataset.
 ### Usage
 
 [TODO. Explain how to use the whole thing]
+
+To get the dependencies, run
+
+```sh
+pip install -r requirements.txt
+```
