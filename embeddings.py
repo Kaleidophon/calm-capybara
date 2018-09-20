@@ -1,6 +1,4 @@
 import numpy as np
-from tweet_data import TweetsBaseDataset
-from torch.nn import Embedding
 
 def get_embeddings(filename, vocabulary, dim=300):
     """
