@@ -110,3 +110,6 @@ venv.bak/
 .dmypy.json
 dmypy.json
 .idea/
+
+# Word embeddings
+ntua_twitter_300.txt
