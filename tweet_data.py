@@ -110,7 +110,7 @@ class TweetsBaseDataset(data.Dataset):
     def __len__(self):
         return self.length
 
-    def process_tweet(self, text, processor='nltk'):
+    def process_tweet(self, text):
         """ Process and tokenize a tweet.
         Args:
             - text (str): a raw tweet in string format
@@ -118,18 +118,7 @@ class TweetsBaseDataset(data.Dataset):
                 'ekphrasis'.
         Returns: list, containing tokens after processing
         """
-        if processor == 'nltk':
-            # More operations can be added here before returning list of tokens
-            try:
-                return nltk.word_tokenize(text)
-            except LookupError:
-                # Download tokenization resource if not installed yet
-                nltk.download("punkt")
-                return nltk.word_tokenize(text)
-        elif processor == 'ekphrasis':
-            return text_processor.pre_process_doc(text)
-        else:
-            raise ValueError('Invalid processor: {}'.format(processor))
+        return text_processor.pre_process_doc(text)
 
     @staticmethod
     def collate_fn(data_list, batch_first=False):
@@ -161,13 +150,16 @@ class TweetsBaseDataset(data.Dataset):
     def dump(self, filename):
         """ Save dataset to disk using the provided file name (str) """
         joblib.dump(self, filename)
+        print('Dumped dataset to {}'.format(filename))
 
     @staticmethod
     def load(filename):
         """ Load a serialized dataset from the provided file name (str).
         Assumes file is a valid serialized dataset.
         """
-        return joblib.load(filename)
+        dataset = joblib.load(filename)
+        print('Loaded dataset with {:d} tweets, {:d} unique tokens'.format(
+            len(dataset), len(dataset.vocabulary)))
 
 
 class TweetsBOWDataset(TweetsBaseDataset):
@@ -198,6 +190,16 @@ class TweetsBOWDataset(TweetsBaseDataset):
         print('Creating TF-ID matrix')
         self.data = TfidfTransformer().fit_transform(count_matrix)
 
-
 if __name__ == '__main__':
-    ds = TweetsBOWDataset('data/dev', 'us_trial')
+    # When run as a script all datasets are loaded, processed and serialized
+    data_dir = './data'
+    train_set = TweetsBaseDataset(os.path.join(data_dir, 'train'), 'us_train')
+    train_set.dump(os.path.join(data_dir, 'us_train.set'))
+
+    dev_set = TweetsBaseDataset(os.path.join(data_dir, 'dev'),
+                'us_trial', vocabulary=train_set.vocabulary)
+    dev_set.dump(os.path.join(data_dir, 'us_trial.set'))
+
+    test_set = TweetsBaseDataset(os.path.join(data_dir, 'test'),
+                                'us_test', vocabulary=train_set.vocabulary)
+    test_set.dump(os.path.join(data_dir, 'us_test.set'))
