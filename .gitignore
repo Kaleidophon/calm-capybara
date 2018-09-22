@@ -116,3 +116,9 @@ dmypy.json
 
 # Word embeddings
 ntua_twitter_300.txt
+
+# Serialized datasets
+*.set
+
+# Serialized arrays
+*.npy
