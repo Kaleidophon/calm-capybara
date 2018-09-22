@@ -16,7 +16,7 @@ def get_embeddings(filename, vocabulary, dim=300):
         i = vocabulary[w].
     """
     # Initialize embeddings from standard normal
-    embeddings = np.random.randn(len(vocabulary), dim)
+    embeddings = np.random.randn(len(vocabulary), dim).astype(np.float32)
     words_found = 0
 
     with open(filename) as file:
