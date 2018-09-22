@@ -1,10 +1,6 @@
 """
 Training and evaluation functions for the emoji prediction task
 """
-
-import numpy as np
-import os
-
 # Torch modules
 import torch
 import torch.optim as optim
@@ -15,6 +11,8 @@ from torch.utils.data import DataLoader
 from tweet_data import TweetsBOWDataset, TweetsBaseDataset
 
 from sklearn.metrics import accuracy_score, f1_score
+from tensorboardX import SummaryWriter
+
 
 # Check for CUDA device / GPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -78,6 +76,8 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
     criterion = nn.CrossEntropyLoss().to(device)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
+    writer = SummaryWriter()
+
     for epoch in range(epochs):
         print('Epoch {:d}/{:d}'.format(epoch, epochs))
         n_batches = 0
@@ -100,6 +100,7 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
 
             # Evaluate on training set
             if n_batches % 10 == 0:
+                writer.add_scalar('loss', loss, n_batches)
                 score = get_score(outputs, labels, score='accuracy')
                 print("\r{}/{}: loss = {:.4f}, accuracy = {:.4f}".format(
                     n_batches, len(train_loader), loss, score),
