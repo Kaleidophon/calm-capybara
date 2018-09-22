@@ -14,6 +14,8 @@ from torch.utils.data import DataLoader
 # Data loading modules
 from tweet_data import TweetsBOWDataset, TweetsBaseDataset
 
+from sklearn.metrics import accuracy_score, f1_score
+
 # Check for CUDA device / GPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -21,17 +23,23 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 DATA_DIR_DEFAULT = './data'
 TEST_BATCH_SIZE = 128
 
-def accuracy(predictions, targets):
+def get_score(logits, targets, score='f1_score'):
     """
-    Computes the prediction accuracy of the network.
+    Computes the score of the network.
+    Args:
+        - logits (tensor): predictions of the model.
+            shape (n_batches, n_classes)
+        - targets (tensor): true labels, containing values in [0, n_classes-1]
+            shape (n_batches,)
+        - score (str): one of 'accuracy', 'f1_score'
+    Returns: float, the calculated score.
     """
-    # TODO: Use torch
-    assert (predictions.size == targets.size), "ERROR! prediction and target size mismatch"
+    predictions = torch.argmax(logits, dim=1)
 
-    accr = np.sum(predictions == targets) / predictions.size
-
-    return accr
-
+    if score == 'accuracy':
+        return accuracy_score(targets.data.numpy(), predictions.data.numpy())
+    elif score == 'f1_score':
+        return f1_score(targets.data.numpy(), predictions.data.numpy())
 
 def evaluate(model, criterion, eval_data):
     # TODO: replace with continuous averaging
@@ -47,7 +55,7 @@ def evaluate(model, criterion, eval_data):
             inputs = inputs.to(device)
 
             pred = model.forward(inputs)
-            accr.append(accuracy(pred.cpu().numpy(), labels))
+            accr.append(get_score(pred, labels))
 
             labels = torch.LongTensor(labels).to(device)
             loss = criterion(pred, labels)
@@ -87,7 +95,7 @@ def train_model(model, train_set, dev_set, batch_size, epochs, learning_rate,
             optimizer.step()
 
             # Evaluate on training set
-            accr = accuracy(outputs, labels)
+            accr = get_score(outputs, labels, score='accuracy')
             print("\rEpoch {}/{}: Training loss = {}, Training accuracy = {}".format(epoch,
                         iteration, "%.4f" % loss, "%.4f" % accr), end='', flush=True)
 
