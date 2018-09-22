@@ -160,6 +160,7 @@ class TweetsBaseDataset(data.Dataset):
         dataset = joblib.load(filename)
         print('Loaded dataset with {:d} tweets, {:d} unique tokens'.format(
             len(dataset), len(dataset.vocabulary)))
+        return dataset
 
 
 class TweetsBOWDataset(TweetsBaseDataset):
