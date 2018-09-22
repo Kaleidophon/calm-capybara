@@ -39,35 +39,36 @@ def get_score(logits, targets, score='f1_score'):
     if score == 'accuracy':
         return accuracy_score(targets.data.numpy(), predictions.data.numpy())
     elif score == 'f1_score':
-        return f1_score(targets.data.numpy(), predictions.data.numpy())
+        return f1_score(targets.data.numpy(), predictions.data.numpy(),
+                        average='macro')
 
 def evaluate(model, criterion, eval_data):
     # TODO: replace with continuous averaging
-    test_loss = []
-    accr = []
+    mean_loss = 0
+    mean_accr = 0
 
     # Load the test data
     data_loader = DataLoader(eval_data, collate_fn=TweetsBaseDataset.collate_fn,
                              batch_size=TEST_BATCH_SIZE, shuffle=True)
 
     with torch.no_grad():
-        for inputs, labels, _ in data_loader:
+        for inputs, labels, lengths in data_loader:
             inputs = inputs.to(device)
+            labels = labels.to(device)
+            lengths = lengths.to(device)
 
-            pred = model.forward(inputs)
-            accr.append(get_score(pred, labels))
+            outputs = model(inputs, lengths)
+            loss = criterion(outputs, labels)
+            mean_accr += get_score(outputs, labels, 'accuracy')/len(data_loader)
 
-            labels = torch.LongTensor(labels).to(device)
-            loss = criterion(pred, labels)
-            test_loss.append(loss.item())
+            loss = criterion(outputs, labels)
+            mean_loss += loss.item()/len(data_loader)
 
-    return np.average(test_loss), np.average(accr)
+    return mean_loss, mean_accr
 
-def train_model(model, train_set, dev_set, batch_size, epochs, learning_rate,
-                hparams=None, dataset_name='us'):
-
-    # Set the seed for reproduction of results
-    torch.manual_seed(123)
+def train_model(model, datasets, batch_size, epochs, learning_rate,
+                hparams=None):
+    train_set, dev_set, test_set = datasets
 
     train_loader = DataLoader(train_set, batch_size, shuffle=True,
                               num_workers=4,
@@ -78,10 +79,13 @@ def train_model(model, train_set, dev_set, batch_size, epochs, learning_rate,
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     for epoch in range(epochs):
-        iteration = 1
+        print('Epoch {:d}/{:d}'.format(epoch, epochs))
+        n_batches = 0
         for inputs, labels, lengths in train_loader:
+            n_batches += 1
             inputs = inputs.to(device)
             labels = labels.to(device)
+            lengths = lengths.to(device)
 
             # Initialize the gradients to zero
             optimizer.zero_grad()
@@ -95,21 +99,23 @@ def train_model(model, train_set, dev_set, batch_size, epochs, learning_rate,
             optimizer.step()
 
             # Evaluate on training set
-            accr = get_score(outputs, labels, score='accuracy')
-            print("\rEpoch {}/{}: Training loss = {}, Training accuracy = {}".format(epoch,
-                        iteration, "%.4f" % loss, "%.4f" % accr), end='', flush=True)
+            if n_batches % 10 == 0:
+                score = get_score(outputs, labels, score='accuracy')
+                print("\r{}/{}: loss = {:.4f}, accuracy = {:.4f}".format(
+                    n_batches, len(train_loader), loss, score),
+                    end='', flush=True)
 
-            iteration += 1
-
-            # Evaluate on dev set
+        # Evaluate on dev set
+        # TODO: replace/add f1_score
         eval_loss, eval_accr = evaluate(model, criterion, dev_set)
-        print("\nValidation loss = {}, Validation accuracy = {}".format("%.4f" % eval_loss, "%.4f" % eval_accr))
+        print("\nValidation loss = {:.4f}, Validation accuracy = {:.4f}".format(
+            eval_loss, eval_accr))
 
     print("Training Completed")
 
-    # Test the trained model
-    #test_set = TweetsBaseDataset.load(os.path.join(DATA_DIR_DEFAULT,
-    #    dataset_name + '_train.set'))
-    #test_loss, test_accuracy = evaluate(model, criterion, test_set)
-    #print("\nTest loss = {}, Test accuracy = {}".format("%.4f" % test_loss, "%.4f" % test_accuracy))
-    #print("Test Completed")
+    # Evaluate on test set
+    # TODO: replace/add f1_score
+    test_loss, test_accr = evaluate(model, criterion, dev_set)
+    print("\nTest loss = {:.4f}, Test accuracy = {:.4f}".format(
+        test_loss, test_accr))
+    print("Test Completed")
