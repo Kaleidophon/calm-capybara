@@ -10,6 +10,7 @@ import functools
 # EXT
 from sklearn import linear_model
 from sklearn.metrics import f1_score, precision_score, recall_score
+import losswise
 
 # PROJECT
 from tweet_data import TweetsBOWDataset, TweetsBaseDataset
@@ -153,24 +154,24 @@ if __name__ == "__main__":
     english_test = TweetsBOWDataset.load("data/us_test.set")
 
     # Train models and find best hyperparameters
-    hyperparameter_options_svm = {
-        "classifier": ["svm"],
-        "max_iter": [30],
-        "penalty": ["l1", "l2"],
-        "random_state": [42],
-        "alpha": [0.00001, 0.0001, 0.001, 0.01],
-        "tol": [None, 0.0001, 0.001, 0.01],
-        "loss": ["hinge", "log", "squared_hinge"],
-        "n_jobs": [4]
-    }
-    hyperparameter_options_lr = {
-        "classifier": ["logistic_regression"],
-        "max_iter": [30],
-        "penalty": ["l1", "l2"],
-        "random_state": [42],
-        "tol": [0.0001, 0.001, 0.01, 0.1],
-        "solver": ["liblinear", "saga"],
-        "n_jobs": [4]
-    }
-    grid_search(BoWBaseline, english_train, english_dev, english_test, hyperparameter_options_svm)
-    grid_search(BoWBaseline, english_train, english_dev, english_test, hyperparameter_options_lr)
+    # hyperparameter_options_svm = {
+    #     "classifier": ["svm"],
+    #     "max_iter": [30],
+    #     "penalty": ["l1", "l2"],
+    #     "random_state": [42],
+    #     "alpha": [0.00001, 0.0001, 0.001, 0.01],
+    #     "tol": [None, 0.0001, 0.001, 0.01],
+    #     "loss": ["hinge", "log", "squared_hinge"],
+    #     "n_jobs": [4]
+    # }
+    # hyperparameter_options_lr = {
+    #     "classifier": ["logistic_regression"],
+    #     "max_iter": [30],
+    #     "penalty": ["l1", "l2"],
+    #     "random_state": [42],
+    #     "tol": [0.0001, 0.001, 0.01, 0.1],
+    #     "solver": ["liblinear", "saga"],
+    #     "n_jobs": [4]
+    # }
+    # grid_search(BoWBaseline, english_train, english_dev, english_test, hyperparameter_options_svm)
+    # grid_search(BoWBaseline, english_train, english_dev, english_test, hyperparameter_options_lr)
