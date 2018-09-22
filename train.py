@@ -55,13 +55,8 @@ def evaluate(model, criterion, eval_data):
 
     return np.average(test_loss), np.average(accr)
 
-def train_model(model, batch_size, epochs, learning_rate, hparams,
-                dataset_name='us'):
-
-    train_set = TweetsBaseDataset.load(os.path.join(DATA_DIR_DEFAULT,
-        dataset_name + '_train.set'))
-    dev_set = TweetsBaseDataset.load(os.path.join(DATA_DIR_DEFAULT,
-        dataset_name + '_train.set'))
+def train_model(model, train_set, dev_set, batch_size, epochs, learning_rate,
+                hparams=None, dataset_name='us'):
 
     # Set the seed for reproduction of results
     torch.manual_seed(123)
@@ -105,8 +100,8 @@ def train_model(model, batch_size, epochs, learning_rate, hparams,
     print("Training Completed")
 
     # Test the trained model
-    test_set = TweetsBaseDataset.load(os.path.join(DATA_DIR_DEFAULT,
-        dataset_name + '_train.set'))
-    test_loss, test_accuracy = evaluate(model, criterion, test_set)
-    print("\nTest loss = {}, Test accuracy = {}".format("%.4f" % test_loss, "%.4f" % test_accuracy))
-    print("Test Completed")
+    #test_set = TweetsBaseDataset.load(os.path.join(DATA_DIR_DEFAULT,
+    #    dataset_name + '_train.set'))
+    #test_loss, test_accuracy = evaluate(model, criterion, test_set)
+    #print("\nTest loss = {}, Test accuracy = {}".format("%.4f" % test_loss, "%.4f" % test_accuracy))
+    #print("Test Completed")
