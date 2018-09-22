@@ -8,11 +8,38 @@ from sklearn.feature_extraction.text import TfidfTransformer
 import numpy as np
 from scipy.sparse import lil_matrix
 from sklearn.externals import joblib
+from ekphrasis.classes.preprocessor import TextPreProcessor
+from ekphrasis.classes.tokenizer import SocialTokenizer
 
 TEXT_EXT = '.text'
 LABELS_EXT = '.labels'
 UNK_SYMBOL = "<UNK>"
 PAD_SYMBOL = "<PAD>"
+
+text_processor = TextPreProcessor(
+    # terms that will be normalized
+    normalize=['url', 'email', 'percent', 'money', 'phone', 'user',
+               'time', 'url', 'date', 'number'],
+    # terms that will be annotated
+    annotate={"hashtag", "allcaps", "elongated", "repeated",
+              'emphasis'},
+
+    # corpus from which the word statistics are going to be used
+    # for word segmentation
+    segmenter="twitter",
+
+    # corpus from which the word statistics are going to be used
+    # for spell correction
+    corrector="twitter",
+
+    unpack_hashtags=True,  # perform word segmentation on hashtags
+    unpack_contractions=True,  # Unpack contractions (can't -> can not)
+    spell_correct_elong=False,  # spell correction for elongated words
+
+    # select a tokenizer. You can use SocialTokenizer, or pass your own
+    # the tokenizer, should take as input a string and return a list of tokens
+    tokenizer=SocialTokenizer(lowercase=True).tokenize
+)
 
 
 class TweetsBaseDataset(data.Dataset):
@@ -83,19 +110,26 @@ class TweetsBaseDataset(data.Dataset):
     def __len__(self):
         return self.length
 
-    def process_tweet(self, text):
+    def process_tweet(self, text, processor='nltk'):
         """ Process and tokenize a tweet.
         Args:
             - text (str): a raw tweet in string format
+            - processor (str): the processor to use. One of 'nltk' or
+                'ekphrasis'.
         Returns: list, containing tokens after processing
         """
-        # More operations can be added here before returning list of tokens
-        try:
-            return nltk.word_tokenize(text)
-        except LookupError:
-            # Download tokenization resource if not installed yet
-            nltk.download("punkt")
-            return nltk.word_tokenize(text)
+        if processor == 'nltk':
+            # More operations can be added here before returning list of tokens
+            try:
+                return nltk.word_tokenize(text)
+            except LookupError:
+                # Download tokenization resource if not installed yet
+                nltk.download("punkt")
+                return nltk.word_tokenize(text)
+        elif processor == 'ekphrasis':
+            return text_processor.pre_process_doc(text)
+        else:
+            raise ValueError('Invalid processor: {}'.format(processor))
 
     @staticmethod
     def collate_fn(data_list, batch_first=False):
