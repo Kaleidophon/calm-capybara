@@ -122,3 +122,6 @@ ntua_twitter_300.txt
 
 # Serialized arrays
 *.npy
+
+# Logging folders
+runs/
