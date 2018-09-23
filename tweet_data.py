@@ -197,12 +197,12 @@ if __name__ == '__main__':
     # When run as a script all datasets are loaded, processed and serialized
     data_dir = './data'
     train_set = TweetsBaseDataset(os.path.join(data_dir, 'train'), 'us_train')
-    train_set.dump(os.path.join(data_dir, 'us_train.set'))
+    train_set.dump(os.path.join(data_dir, 'train', 'us_train.set'))
 
     dev_set = TweetsBaseDataset(os.path.join(data_dir, 'dev'),
                 'us_trial', vocabulary=train_set.vocabulary)
-    dev_set.dump(os.path.join(data_dir, 'us_trial.set'))
+    dev_set.dump(os.path.join(data_dir, 'dev', 'us_trial.set'))
 
     test_set = TweetsBaseDataset(os.path.join(data_dir, 'test'),
                                 'us_test', vocabulary=train_set.vocabulary)
-    test_set.dump(os.path.join(data_dir, 'us_test.set'))
+    test_set.dump(os.path.join(data_dir, 'test', 'us_test.set'))
