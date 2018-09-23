@@ -93,8 +93,9 @@ class TweetsBaseDataset(data.Dataset):
             - data_list (list): contains tuples, each with two tensors
                 as returned by __getitem__() in the Dataset class.
         Returns:
-            - packed_data (tensor): padded sequences forming a batch
+            - padded_data (tensor): padded sequences forming a batch
             - labels (tensor): batch of labels
+            - lengths (tensor): length of each sequence in the batch
         """
         # Separate token indices and labels
         data, labels = zip(*data_list)
