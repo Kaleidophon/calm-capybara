@@ -30,17 +30,17 @@ def get_score(logits, targets, score='f1_score'):
         - score (str): one of 'accuracy', 'f1_score'
     Returns: float, the calculated score.
     """
-    predictions = torch.argmax(logits, dim=1)
+    targets = targets.data.numpy()
+    predictions = torch.argmax(logits, dim=1).data.numpy()
 
     if score == 'accuracy':
-        return accuracy_score(targets.data.numpy(), predictions.data.numpy())
+        return accuracy_score(targets, predictions)
     elif score == 'f1_score':
-        return f1_score(targets.data.numpy(), predictions.data.numpy(),
-                        average='macro')
+        return f1_score(targets, predictions, average='macro')
 
 def evaluate(model, criterion, eval_data):
     mean_loss = 0
-    mean_accr = 0
+    mean_f1 = 0
 
     # Load the test data
     data_loader = DataLoader(eval_data, collate_fn=TweetsBaseDataset.collate_fn,
@@ -55,12 +55,12 @@ def evaluate(model, criterion, eval_data):
             outputs = model(inputs, lengths)
 
             loss = criterion(outputs, labels)
-            mean_loss += loss.item() / len(data_loader)
+            mean_loss += loss.item()/len(data_loader)
 
-            accuracy = get_score(outputs, labels, 'accuracy')
-            mean_accr += accuracy/len(data_loader)
+            f1 = get_score(outputs, labels, 'f1_score')
+            mean_f1 += f1/len(data_loader)
 
-    return mean_loss, mean_accr
+    return mean_loss, mean_f1
 
 def train_model(model, datasets, batch_size, epochs, learning_rate,
                 metadata=None):
@@ -79,8 +79,8 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
     # Write hyperparameters to summary
     if metadata is None:
         metadata = {}
-    metadata['batch_size'] = batch_size
-    metadata['learning_rate'] = learning_rate
+    metadata['Batch size:'] = batch_size
+    metadata['Learning rate:'] = learning_rate
     text_summary = build_text_summary(metadata)
     writer.add_text('metadata', text_summary)
 
@@ -106,17 +106,25 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
 
             # Evaluate on training set
             if n_batches % 10 == 0:
-                writer.add_scalar('loss', loss, n_batches)
-                score = get_score(outputs, labels, score='accuracy')
-                print("\r{}/{}: loss = {:.4f}, accuracy = {:.4f}".format(
-                    n_batches, len(train_loader), loss, score),
+                f1 = get_score(outputs, labels, score='f1_score')
+                print("\r{}/{}: loss = {:.4f}, f1_score = {:.4f}".format(
+                    n_batches, len(train_loader), loss, f1),
                     end='', flush=True)
 
+                # Write to Tensorboard
+                writer.add_scalar('training/loss', loss, n_batches)
+                writer.add_scalar('training/f1_score', f1, n_batches)
+
         # Evaluate on dev set
-        # TODO: replace/add f1_score
-        eval_loss, eval_accr = evaluate(model, criterion, dev_set)
-        print("\nValidation loss = {:.4f}, Validation accuracy = {:.4f}".format(
-            eval_loss, eval_accr))
+        eval_loss, eval_f1 = evaluate(model, criterion, dev_set)
+        print("\nvalidation loss = {:.4f}, validation f1_score = {:.4f}".format(
+            eval_loss, eval_f1))
+
+        # Write to Tensorboard
+        writer.add_scalar('validation/loss', eval_loss, epoch)
+        writer.add_scalar('validation/f1_score', eval_f1, epoch)
+
+        # TODO: Checkpoint
 
     print("Training Completed")
 
