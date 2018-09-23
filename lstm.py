@@ -34,14 +34,15 @@ if __name__ == '__main__':
     model = LSTMClassifier(embeddings)
 
     data_dir = './data'
-    train_set = TweetsBaseDataset.load(os.path.join(data_dir,
+    train_set = TweetsBaseDataset.load(os.path.join(data_dir, 'train',
             'us_train.set'))
-    dev_set = TweetsBaseDataset.load(os.path.join(data_dir,
+    dev_set = TweetsBaseDataset.load(os.path.join(data_dir, 'dev',
             'us_trial.set'))
-    test_set = TweetsBaseDataset.load(os.path.join(data_dir,
+    test_set = TweetsBaseDataset.load(os.path.join(data_dir, 'test',
             'us_test.set'))
 
     datasets = (train_set, dev_set, test_set)
 
+    metadata = {'Model name': 'basic LSTM'}
     train_model(model, datasets, batch_size=32, epochs=20,
-                learning_rate=1e-3)
+                learning_rate=1e-3, metadata=metadata)

@@ -63,7 +63,7 @@ def evaluate(model, criterion, eval_data):
     return mean_loss, mean_accr
 
 def train_model(model, datasets, batch_size, epochs, learning_rate,
-                hparams=None):
+                metadata=None):
     train_set, dev_set, test_set = datasets
 
     train_loader = DataLoader(train_set, batch_size, shuffle=True,
@@ -75,6 +75,14 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     writer = SummaryWriter()
+
+    # Write hyperparameters to summary
+    if metadata is None:
+        metadata = {}
+    metadata['batch_size'] = batch_size
+    metadata['learning_rate'] = learning_rate
+    text_summary = build_text_summary(metadata)
+    writer.add_text('metadata', text_summary)
 
     for epoch in range(epochs):
         print('Epoch {:d}/{:d}'.format(epoch, epochs))
@@ -118,3 +126,9 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
     print("\nTest loss = {:.4f}, Test accuracy = {:.4f}".format(
         test_loss, test_accr))
     print("Test Completed")
+
+def build_text_summary(metadata):
+    text_summary = ""
+    for key, value in metadata.items():
+        text_summary += '**' + key + ':** ' + str(value) + '</br>'
+    return text_summary
