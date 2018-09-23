@@ -64,6 +64,19 @@ def evaluate(model, criterion, eval_data):
 
 def train_model(model, datasets, batch_size, epochs, learning_rate,
                 metadata=None):
+    """
+    Train a sequence model on the Emoji Dataset.
+    Args:
+        - model (torch.nn.Module): the model to be trained
+        - datasets (tuple): contains 3 datasets (TweetsBaseDataset)
+            corresponding to train, dev and test splits
+        - batch_size (int): mini-batch size for training
+        - epochs (int): number of iterations over the training set
+        - learning_rate (float): used in the optimizer
+        - metadata (dict): contains keys and values of any type with a valid
+            string representation, which are saved for visualization in
+            Tensorboard. Use to log model name and hyperparameters.
+    """
     train_set, dev_set, test_set = datasets
 
     train_loader = DataLoader(train_set, batch_size, shuffle=True,
