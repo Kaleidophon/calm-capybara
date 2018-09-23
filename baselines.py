@@ -25,15 +25,15 @@ class BoWBaseline:
     }
     scikit_params = {
         # Best logistic regression parameters found
-        # Dev set: Precision: 0.2995 | Recall: 0.2869 | F1 - score: 0.2755
-        # Test set: Precision: 0.3281 | Recall: 0.2972 | F1 - score: 0.3018
+        # Dev set: Precision: 0.3166 | Recall: 0.2965 | F1 - score: 0.2883
+        # Test set: Precision: 0.3450 | Recall: 0.3069 | F1 - score: 0.3129
         "logistic_regression": {
             'max_iter': 30, 'penalty': 'l1', 'random_state': 42, 'tol': 0.1, 'solver': 'saga'
         },
 
         # Best SVM parameters found
-        # Dev set:  Precision: 0.2396 | Recall: 0.2623 | F1 - score: 0.2428
-        # Test set: Precision: 0.2482 | Recall: 0.2520 | F1 - score: 0.2424
+        # Dev set:  Precision: 0.2488 | Recall: 0.2759 | F1 - score: 0.2514
+        # Test set: Precision: 0.2586 | Recall: 0.2681 | F1 - score: 0.2549
         "svm": {
             'max_iter': 30, 'penalty': 'l2', 'random_state': 42, 'alpha': 0.0001, 'tol': 0.0001, 'loss': 'hinge'
         }
@@ -153,24 +153,29 @@ if __name__ == "__main__":
     english_test = TweetsBOWDataset.load("data/us_test.set")
 
     # Train models and find best hyperparameters
-    hyperparameter_options_svm = {
-        "classifier": ["svm"],
-        "max_iter": [30],
-        "penalty": ["l1", "l2"],
-        "random_state": [42],
-        "alpha": [0.00001, 0.0001, 0.001, 0.01],
-        "tol": [None, 0.0001, 0.001, 0.01],
-        "loss": ["hinge", "log", "squared_hinge"],
-        "n_jobs": [4]
-    }
-    hyperparameter_options_lr = {
-        "classifier": ["logistic_regression"],
-        "max_iter": [30],
-        "penalty": ["l1", "l2"],
-        "random_state": [42],
-        "tol": [0.0001, 0.001, 0.01, 0.1],
-        "solver": ["liblinear", "saga"],
-        "n_jobs": [4]
-    }
-    grid_search(BoWBaseline, english_train, english_dev, english_test, hyperparameter_options_svm)
-    grid_search(BoWBaseline, english_train, english_dev, english_test, hyperparameter_options_lr)
+    # hyperparameter_options_svm = {
+    #     "classifier": ["svm"],
+    #     "max_iter": [30],
+    #     "penalty": ["l1", "l2"],
+    #     "random_state": [42],
+    #     "alpha": [0.00001, 0.0001, 0.001, 0.01],
+    #     "tol": [None, 0.0001, 0.001, 0.01],
+    #     "loss": ["hinge", "log", "squared_hinge"],
+    #     "n_jobs": [4]
+    # }
+    # hyperparameter_options_lr = {
+    #     "classifier": ["logistic_regression"],
+    #     "max_iter": [30],
+    #     "penalty": ["l1", "l2"],
+    #     "random_state": [42],
+    #     "tol": [0.0001, 0.001, 0.01, 0.1],
+    #     "solver": ["liblinear", "saga"],
+    #     "n_jobs": [4]
+    # }
+    # grid_search(BoWBaseline, english_train, english_dev, english_test, hyperparameter_options_svm)
+    # grid_search(BoWBaseline, english_train, english_dev, english_test, hyperparameter_options_lr)
+    svm = BoWBaseline(classifier="svm")
+    svm.train(english_train)
+    print(svm.eval(english_dev))
+    print(svm.eval(english_test))
+

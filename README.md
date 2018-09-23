@@ -18,8 +18,8 @@ on the test set.
 
 |  Model|Precision |Recall  |F1-score  |
 |------:|:----------|:-------|:---------|
-|Bag-of-Words + Logistic Regression | 0.3281 | 0.2972 | 0.3018 |
-|Bag-of-Words + SVM  | 0.2482 | 0.2520 | 0.2424 |
+|Bag-of-Words + Logistic Regression | 0.3450 | 0.3069 | 0.3129 |
+|Bag-of-Words + SVM  | 0.2586 | 0.2681 | 0.2549 |
 
 #### Spanish
 
