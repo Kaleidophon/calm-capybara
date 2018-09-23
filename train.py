@@ -13,13 +13,11 @@ from tweet_data import TweetsBOWDataset, TweetsBaseDataset
 from sklearn.metrics import accuracy_score, f1_score
 from tensorboardX import SummaryWriter
 
-
-# Check for CUDA device / GPU
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 # Directory in which tweet data is saved
 DATA_DIR_DEFAULT = './data'
+
 TEST_BATCH_SIZE = 128
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def get_score(logits, targets, score='f1_score'):
     """
@@ -41,7 +39,6 @@ def get_score(logits, targets, score='f1_score'):
                         average='macro')
 
 def evaluate(model, criterion, eval_data):
-    # TODO: replace with continuous averaging
     mean_loss = 0
     mean_accr = 0
 
@@ -56,11 +53,12 @@ def evaluate(model, criterion, eval_data):
             lengths = lengths.to(device)
 
             outputs = model(inputs, lengths)
-            loss = criterion(outputs, labels)
-            mean_accr += get_score(outputs, labels, 'accuracy')/len(data_loader)
 
             loss = criterion(outputs, labels)
-            mean_loss += loss.item()/len(data_loader)
+            mean_loss += loss.item() / len(data_loader)
+
+            accuracy = get_score(outputs, labels, 'accuracy')
+            mean_accr += accuracy/len(data_loader)
 
     return mean_loss, mean_accr
 
