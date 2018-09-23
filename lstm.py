@@ -19,12 +19,11 @@ class LSTMClassifier(nn.Module):
     def forward(self, inputs, lengths):
         x = self.embeddings(inputs)
         x = pack_padded_sequence(x, lengths)
-        _, x = self.lstm(x)
+        _, (hidden, cell) = self.lstm(x)
 
-        # x[0] contains hidden state
         # First dimension is sequence dimension which here always equals 1
-        # So we want x[0][0] to remove the sequence dimension
-        logits = self.linear(x[0][0])
+        # so we remove it before passing it to the linear layer
+        logits = self.linear(hidden.view(len(lengths), -1))
         return logits
 
 if __name__ == '__main__':
@@ -34,14 +33,14 @@ if __name__ == '__main__':
     model = LSTMClassifier(embeddings)
 
     data_dir = './data'
-    train_set = TweetsBaseDataset.load(os.path.join(data_dir, 'train',
-            'us_train.set'))
-    dev_set = TweetsBaseDataset.load(os.path.join(data_dir, 'dev',
-            'us_trial.set'))
+    #train_set = TweetsBaseDataset.load(os.path.join(data_dir, 'train',
+    #        'us_train.set'))
+    #dev_set = TweetsBaseDataset.load(os.path.join(data_dir, 'dev',
+    #        'us_trial.set'))
     test_set = TweetsBaseDataset.load(os.path.join(data_dir, 'test',
             'us_test.set'))
 
-    datasets = (train_set, dev_set, test_set)
+    datasets = (test_set, test_set, test_set)
 
     metadata = {'Model name': 'basic LSTM'}
     train_model(model, datasets, batch_size=32, epochs=20,

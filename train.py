@@ -79,8 +79,8 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
     # Write hyperparameters to summary
     if metadata is None:
         metadata = {}
-    metadata['Batch size:'] = batch_size
-    metadata['Learning rate:'] = learning_rate
+    metadata['Batch size'] = batch_size
+    metadata['Learning rate'] = learning_rate
     text_summary = build_text_summary(metadata)
     writer.add_text('metadata', text_summary)
 
