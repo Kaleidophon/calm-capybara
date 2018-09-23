@@ -129,11 +129,13 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
     print("Training Completed")
 
     # Evaluate on test set
-    # TODO: replace/add f1_score
-    test_loss, test_accr = evaluate(model, criterion, dev_set)
-    print("\nTest loss = {:.4f}, Test accuracy = {:.4f}".format(
-        test_loss, test_accr))
-    print("Test Completed")
+    test_loss, test_f1 = evaluate(model, criterion, test_set)
+    print("\ntest loss = {:.4f}, test f1_score = {:.4f}".format(
+        test_loss, test_f1))
+
+    # Write to Tensorboard
+    writer.add_scalar('test/loss', test_loss, 0)
+    writer.add_scalar('test/f1_score', test_f1, 0)
 
 def build_text_summary(metadata):
     text_summary = ""
