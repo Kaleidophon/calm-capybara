@@ -27,19 +27,21 @@ class LSTMClassifier(nn.Module):
         logits = self.linear(x[0][0])
         return logits
 
-np.load('./embeddings/embeddings.npy')
-embeddings = np.load('./embeddings/embeddings.npy')
-model = LSTMClassifier(embeddings)
+if __name__ == '__main__':
+    embeddings_dir = './embeddings'
 
-DATA_DIR_DEFAULT = './data'
-train_set = TweetsBaseDataset.load(os.path.join(DATA_DIR_DEFAULT,
-        'us_train.set'))
-dev_set = TweetsBaseDataset.load(os.path.join(DATA_DIR_DEFAULT,
-        'us_trial.set'))
-test_set = TweetsBaseDataset.load(os.path.join(DATA_DIR_DEFAULT,
-        'us_test.set'))
+    embeddings = np.load(os.path.join(embeddings_dir, 'embeddings.npy'))
+    model = LSTMClassifier(embeddings)
 
-datasets = (train_set, dev_set, test_set)
+    data_dir = './data'
+    train_set = TweetsBaseDataset.load(os.path.join(data_dir,
+            'us_train.set'))
+    dev_set = TweetsBaseDataset.load(os.path.join(data_dir,
+            'us_trial.set'))
+    test_set = TweetsBaseDataset.load(os.path.join(data_dir,
+            'us_test.set'))
 
-train_model(model, datasets, batch_size=32, epochs=20,
-            learning_rate=1e-3)
+    datasets = (train_set, dev_set, test_set)
+
+    train_model(model, datasets, batch_size=32, epochs=20,
+                learning_rate=1e-3)
