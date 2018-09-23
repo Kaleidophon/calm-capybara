@@ -44,11 +44,14 @@ def get_embeddings(filename, vocabulary, dim=300):
 if __name__ == '__main__':
     # When run as a script embeddings are loaded and serialized,
     # given a vocabulary in an existing training set
-    train_set = TweetsBaseDataset.load('./data/us_train.set')
+    data_dir = './data'
     embeddings_dir = './embeddings'
+
+    train_set = TweetsBaseDataset.load(
+        os.path.join(data_dir, 'train', 'us_train.set'))
+
     embeddings = get_embeddings(os.path.join(embeddings_dir,
-                                             'ntua_twitter_300.txt'),
-                                train_set.vocabulary)
+                    'ntua_twitter_300.txt'), train_set.vocabulary)
 
     embeddings_fname = 'embeddings.npy'
     np.save(os.path.join(embeddings_dir, embeddings_fname), embeddings)
