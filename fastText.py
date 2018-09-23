@@ -73,9 +73,6 @@ def eval_model(model, DATA_FOLDER, FILE,TEXT_EXT):
         for line in file:
             pred_labels.append(int(model.predict(line)[0][0]))
 
-    print(len(pred_labels))
-    print(pred_labels)
-
     # Load labels
     label_file = DATA_FOLDER+'us_trial'+LABELS_EXT
     target_labels = []
@@ -183,7 +180,7 @@ if __name__ == "__main__":
     # Perform grid search to find best hyperparameters (ref:http://soner.in/fasttext-grid-search/)
     hyperparameter_options_ft = {
         "epoch": [50, 100],
-        "lr": [0.25, 0.10, 0.05, 0.01],
+        "lr": [0.10, 0.05, 0.01],
         "loss": ["ns", "softmax"],
         "dim": [300, 100],
         "ws": [5, 10, 25],
