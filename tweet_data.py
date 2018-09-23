@@ -1,41 +1,17 @@
+"""
+Classes and methods to read, process, and serialize data from the Emoji Dataset
+"""
 import torch
 from torch.utils import data
 from torch.nn.utils.rnn import pad_sequence
 import os
-import nltk
 from collections import Counter, defaultdict
 from sklearn.feature_extraction.text import TfidfTransformer
 import numpy as np
 from scipy.sparse import lil_matrix
 from sklearn.externals import joblib
-
-#from ekphrasis.classes.preprocessor import TextPreProcessor
-#from ekphrasis.classes.tokenizer import SocialTokenizer
-
-# text_processor = TextPreProcessor(
-#     # terms that will be normalized
-#     normalize=['url', 'email', 'percent', 'money', 'phone', 'user',
-#                'time', 'url', 'date', 'number'],
-#     # terms that will be annotated
-#     annotate={"hashtag", "allcaps", "elongated", "repeated",
-#               'emphasis'},
-#
-#     # corpus from which the word statistics are going to be used
-#     # for word segmentation
-#     segmenter="twitter",
-#
-#     # corpus from which the word statistics are going to be used
-#     # for spell correction
-#     corrector="twitter",
-#
-#     unpack_hashtags=True,  # perform word segmentation on hashtags
-#     unpack_contractions=True,  # Unpack contractions (can't -> can not)
-#     spell_correct_elong=False,  # spell correction for elongated words
-#
-#     # select a tokenizer. You can use SocialTokenizer, or pass your own
-#     # the tokenizer, should take as input a string and return a list of tokens
-#     tokenizer=SocialTokenizer(lowercase=True).tokenize
-# )
+from ekphrasis.classes.preprocessor import TextPreProcessor
+from ekphrasis.classes.tokenizer import SocialTokenizer
 
 TEXT_EXT = '.text'
 LABELS_EXT = '.labels'
@@ -55,6 +31,32 @@ class TweetsBaseDataset(data.Dataset):
             vocab_size is ignored.
     """
     def __init__(self, path, prefix, vocab_size=10000, vocabulary=None):
+        # Initialize ekphrasis tweet processor
+        self.text_processor = TextPreProcessor(
+            # terms that will be normalized
+            normalize=['url', 'email', 'percent', 'money', 'phone', 'user',
+                       'time', 'url', 'date', 'number'],
+            # terms that will be annotated
+            annotate={"hashtag", "allcaps", "elongated", "repeated",
+                      'emphasis'},
+
+            # corpus from which the word statistics are going to be used
+            # for word segmentation
+            segmenter="twitter",
+
+            # corpus from which the word statistics are going to be used
+            # for spell correction
+            corrector="twitter",
+
+            unpack_hashtags=True,  # perform word segmentation on hashtags
+            unpack_contractions=True,  # Unpack contractions (can't -> can not)
+            spell_correct_elong=False,  # spell correction for elongated words
+
+            # select a tokenizer. You can use SocialTokenizer, or pass your own
+            # the tokenizer, should take as input a string and return a list of tokens
+            tokenizer=SocialTokenizer(lowercase=True).tokenize
+        )
+
         self.prefix = prefix
         token_counts = Counter()
         processed_tweets = []
@@ -74,7 +76,7 @@ class TweetsBaseDataset(data.Dataset):
 
         print('Read file with {:d} tweets'.format(self.length))
 
-        # Build vocabulary
+        # Build vocabulary if not provided
         if vocabulary is None:
             print('Building vocabulary')
             vocabulary = defaultdict(lambda: len(vocabulary))
@@ -118,7 +120,7 @@ class TweetsBaseDataset(data.Dataset):
                 'ekphrasis'.
         Returns: list, containing tokens after processing
         """
-        return 0#text_processor.pre_process_doc(text)
+        return self.text_processor.pre_process_doc(text)
 
     @staticmethod
     def collate_fn(data_list, batch_first=False):
