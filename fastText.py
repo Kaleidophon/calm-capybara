@@ -9,6 +9,8 @@ import functools
 # EXT
 import fasttext as ft
 from sklearn.metrics import f1_score, precision_score, recall_score
+import sklearn.preprocessing
+
 
 
 def preprocess_fasttext(path, prefix):
@@ -80,10 +82,16 @@ def eval_model(model, DATA_FOLDER, FILE,TEXT_EXT):
         for i, line in enumerate(file):
             target_labels.append(int(line))
 
+    # Binarize labels
+    #label_binarizer = sklearn.preprocessing.LabelBinarizer()
+    #label_binarizer.fit(range(max(target_labels)+1))
+    #pred_labels_bin = label_binarizer.transform(pred_labels)
+    #target_labels_bin = label_binarizer.transform(target_labels)
+
     # Calculate evaluation metrics
-    precision = precision_score(target_labels, pred_labels, average="macro")
-    recall = recall_score(target_labels, pred_labels, average="macro")
-    f1score = f1_score(target_labels, pred_labels, average="macro")
+    precision = precision_score(target_labels, pred_labels, average="weighted")
+    recall = recall_score(target_labels, pred_labels, average="weighted")
+    f1score = f1_score(target_labels, pred_labels, average="weighted")
 
     print('Precision:', precision)
     print('Recall:', recall)
@@ -136,7 +144,7 @@ def grid_search(hyperparameter_options, TRAIN_FOLDER, TRAIN_FILE, TEST_FOLDER, T
 
     return best_parameters
 
-def train_ft(TRAIN_FILE, MODEL_FILE,loss, lr, dim, epoch, ws):#, silent):
+def train_ft(TRAIN_FILE, MODEL_FILE, word_ngrams, loss, lr, dim, epoch, ws):#, silent):
     '''
     Trains a baseline text classifier as in Joulin et al. 2017 using a Skip-gram Negative Sampling
     loss function.
@@ -156,7 +164,7 @@ def train_ft(TRAIN_FILE, MODEL_FILE,loss, lr, dim, epoch, ws):#, silent):
     Returns:
         - classifier: trained fastText classifier
     '''
-    classifier = ft.supervised(TRAIN_FILE, MODEL_FILE, loss=loss, lr=lr, dim=dim, epoch=epoch, ws=ws)#, silent=silent)
+    classifier = ft.supervised(TRAIN_FILE, MODEL_FILE,  word_ngrams = word_ngrams,  loss=loss, lr=lr, dim=dim, epoch=epoch, ws=ws, bucket= 2000000)#, silent=silent)
     return classifier
 
 if __name__ == "__main__":
@@ -179,14 +187,14 @@ if __name__ == "__main__":
 
     # Perform grid search to find best hyperparameters (ref:http://soner.in/fasttext-grid-search/)
     hyperparameter_options_ft = {
-        "epoch": [50, 100],
-        "lr": [0.10, 0.05, 0.01],
+        "epoch": [30, 50],
+        "lr": [0.25, 0.5, 0.02],
         "loss": ["ns", "softmax"],
-        "dim": [300, 100],
-        "ws": [5, 10, 25],
+        "dim": [200, 100],
+        "ws": [5, 8],
+        "word_ngrams": [3],
         #"silent": [0]
     }
-
     best = grid_search(hyperparameter_options_ft, TRAIN_FOLDER, TRAIN_FILE, TEST_FOLDER, TEST_FILE,  DEV_FOLDER, DEV_FILE)
     print(best)
 
