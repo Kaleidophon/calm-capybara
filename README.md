@@ -48,3 +48,17 @@ python tweet_data.py
 ```sh
 python embeddings.py
 ```
+
+4. Train a simple LSTM classifier:
+
+```sh
+python lstm.py
+```
+
+5. Monitor training with Tensorboard by running (in the same directory)
+
+```sh
+tensorboard --logdir=runs
+```
+
+and going to [http://localhost:6006](http://localhost:6006)
