@@ -31,8 +31,20 @@ on the test set.
 
 [TODO. Explain how to use the whole thing]
 
-To get the dependencies, run
+1. Install the dependencies with
 
 ```sh
 pip install -r requirements.txt
+```
+
+2. Read the datasets, process them and serialize the results:
+
+```sh
+python tweet_data.py
+```
+
+3. Read pretrained embeddings and serialize only those in the vocabulary:
+
+```sh
+python embeddings.py
 ```
