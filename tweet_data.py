@@ -110,7 +110,7 @@ class TweetsBaseDataset(data.Dataset):
     def __len__(self):
         return self.length
 
-    def process_tweet(self, text, processor='nltk'):
+    def process_tweet(self, text, processor='ekphrasis'):
         """ Process and tokenize a tweet.
         Args:
             - text (str): a raw tweet in string format
