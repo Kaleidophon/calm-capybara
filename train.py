@@ -13,6 +13,7 @@ from tweet_data import TweetsBOWDataset, TweetsBaseDataset
 from sklearn.metrics import accuracy_score, f1_score
 from tensorboardX import SummaryWriter
 
+
 # Directory in which tweet data is saved
 DATA_DIR_DEFAULT = './data'
 
@@ -30,8 +31,8 @@ def get_score(logits, targets, score='f1_score'):
         - score (str): one of 'accuracy', 'f1_score'
     Returns: float, the calculated score.
     """
-    targets = targets.data.numpy()
-    predictions = torch.argmax(logits, dim=1).data.numpy()
+    targets = targets.cpu().data.numpy()
+    predictions = torch.argmax(logits, dim=1).cpu().data.numpy()
 
     if score == 'accuracy':
         return accuracy_score(targets, predictions)

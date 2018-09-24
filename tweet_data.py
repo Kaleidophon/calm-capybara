@@ -190,7 +190,7 @@ if __name__ == '__main__':
     data_dir = './data'
     train_set = TweetsBaseDataset(os.path.join(data_dir, 'train'), 'us_train',
                                   text_processor.pre_process_doc)
-    train_set.dump(os.path.join(data_dir, 'train', 'us_train.set'))
+    train_set.dump(os.path.join(data_dir, 'train', 'us_bow_train.set'))
 
     dev_set = TweetsBaseDataset(os.path.join(data_dir, 'dev'),
                                 'us_trial', text_processor.pre_process_doc,
@@ -200,4 +200,4 @@ if __name__ == '__main__':
     test_set = TweetsBaseDataset(os.path.join(data_dir, 'test'),
                                 'us_test', text_processor.pre_process_doc,
                                 vocabulary=train_set.vocabulary)
-    test_set.dump(os.path.join(data_dir, 'test', 'us_test.set'))
+    test_set.dump(os.path.join(data_dir, 'test', 'us_bow_test.set'))

@@ -142,15 +142,15 @@ def grid_search(model_class, train_set: TweetsBaseDataset, dev_set: TweetsBaseDa
 if __name__ == "__main__":
     # Load data sets
     # english_train = TweetsBOWDataset("data/train", "us_train")
-    # english_train.dump("data/us_train.set")
+    # english_train.dump("data/us_bow_train.set")
     # english_test = TweetsBOWDataset("data/test", "us_test", vocabulary=english_train.vocabulary)
-    # english_test.dump("data/us_test.set")
+    # english_test.dump("data/us_bow_test.set")
     # english_dev = TweetsBOWDataset("data/dev", "us_trial", vocabulary=english_train.vocabulary)
-    # english_dev.dump("data/us_dev.set")
+    # english_dev.dump("data/us_bow_dev.set")
 
-    english_train = TweetsBOWDataset.load("data/us_train.set")
-    english_dev = TweetsBaseDataset.load("data/us_dev.set")
-    english_test = TweetsBOWDataset.load("data/us_test.set")
+    english_train = TweetsBOWDataset.load("data/us_bow_train.set")
+    english_dev = TweetsBaseDataset.load("data/us_bow_dev.set")
+    english_test = TweetsBOWDataset.load("data/us_bow_test.set")
 
     # Train models and find best hyperparameters
     hyperparameter_options_svm = {
