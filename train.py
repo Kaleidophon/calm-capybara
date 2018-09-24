@@ -20,6 +20,7 @@ DATA_DIR_DEFAULT = './data'
 TEST_BATCH_SIZE = 128
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
 def get_score(logits, targets, score='f1_score'):
     """
     Computes the score of the network.
@@ -39,7 +40,9 @@ def get_score(logits, targets, score='f1_score'):
     elif score == 'f1_score':
         return f1_score(targets, predictions, average='macro')
 
+
 def evaluate(model, criterion, eval_data):
+    model = model.eval()
     mean_loss = 0
     mean_f1 = 0
 
@@ -62,6 +65,7 @@ def evaluate(model, criterion, eval_data):
             mean_f1 += f1/len(data_loader)
 
     return mean_loss, mean_f1
+
 
 def train_model(model, datasets, batch_size, epochs, learning_rate,
                 metadata=None):
@@ -133,6 +137,7 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
         eval_loss, eval_f1 = evaluate(model, criterion, dev_set)
         print("\nvalidation loss = {:.4f}, validation f1_score = {:.4f}".format(
             eval_loss, eval_f1))
+        model = model.train()
 
         # Write to Tensorboard
         writer.add_scalar('validation/loss', eval_loss, epoch)

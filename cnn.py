@@ -59,8 +59,8 @@ class CNNClassifier(nn.Module):
 
         # Perform max-over-time pooling
         # List of tensors b x ch_out
-        feature_maps = [torch.max(fm, 2)[0] for fm in feature_maps]
-        # b x ch_out x 3
+        feature_maps = [F.max_pool1d(fm, fm.size(2)).squeeze(2) for fm in feature_maps]
+        # b x ch_out * 3
         c = torch.cat(feature_maps, 1)
 
         # Run through linear layer
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     embeddings = np.load(os.path.join(embeddings_dir, 'embeddings.npy'))
 
     # Init model and begin training
-    model = CNNClassifier(embeddings, train_embeddings=False)
+    model = CNNClassifier(embeddings, train_embeddings=True, num_kernels=9)
     metadata = {'Model name': 'CNN'}
 
-    train_model(model, datasets, batch_size=256, epochs=40, learning_rate=1e-3, metadata=metadata)
+    train_model(model, datasets, batch_size=128, epochs=40, learning_rate=1e-3, metadata=metadata)
