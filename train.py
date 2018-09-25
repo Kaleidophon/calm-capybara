@@ -49,8 +49,8 @@ def evaluate(model, criterion, eval_data):
     data_loader = DataLoader(eval_data, collate_fn=TweetsBaseDataset.collate_fn,
                              batch_size=TEST_BATCH_SIZE, shuffle=True)
 
-    y_true = np.empty(len(eval_data))
-    y_pred = np.empty(len(eval_data))
+    y_true = np.empty(len(eval_data), dtype=int)
+    y_pred = np.empty(len(eval_data), dtype=int)
     counter = 0
 
     with torch.no_grad():
