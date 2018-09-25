@@ -65,7 +65,7 @@ def evaluate(model, criterion, eval_data):
     return mean_loss, mean_f1
 
 def train_model(model, datasets, batch_size, epochs, learning_rate,
-                metadata=None, weights=None, checkpoint=None):
+                weight_decay=0, metadata=None, weights=None, checkpoint=None):
     """Train a sequence model on the Emoji Dataset.
     Args:
         model (torch.nn.Module): the model to be trained
@@ -91,7 +91,8 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
 
     model.to(device)
     criterion = nn.CrossEntropyLoss().to(device)
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate,
+                           weight_decay=weight_decay)
 
     if checkpoint is not None:
         load_model(model, optimizer, checkpoint, eval_model=False)
