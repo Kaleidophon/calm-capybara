@@ -16,9 +16,8 @@ from tensorboardX import SummaryWriter
 
 # Directory in which tweet data is saved
 DATA_DIR_DEFAULT = './data'
-CHECKPOINT_PATH = './Checkpoints/'
 
-TEST_BATCH_SIZE = 128
+TEST_BATCH_SIZE = 256
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def get_score(logits, targets, score='f1_score'):
@@ -32,8 +31,8 @@ def get_score(logits, targets, score='f1_score'):
         - score (str): one of 'accuracy', 'f1_score'
     Returns: float, the calculated score.
     """
-    targets = targets.data.numpy()
-    predictions = torch.argmax(logits, dim=1).data.numpy()
+    targets = targets.data.cpu().numpy()
+    predictions = torch.argmax(logits, dim=1).data.cpu().numpy()
 
     if score == 'accuracy':
         return accuracy_score(targets, predictions)
@@ -41,6 +40,7 @@ def get_score(logits, targets, score='f1_score'):
         return f1_score(targets, predictions, average='macro')
 
 def evaluate(model, criterion, eval_data):
+    model.eval()
     mean_loss = 0
     mean_f1 = 0
 
@@ -65,23 +65,26 @@ def evaluate(model, criterion, eval_data):
     return mean_loss, mean_f1
 
 def train_model(model, datasets, batch_size, epochs, learning_rate,
-                metadata=None, checkpoint=None):
-    """
-    Train a sequence model on the Emoji Dataset.
+                metadata=None, weights=None, checkpoint=None):
+    """Train a sequence model on the Emoji Dataset.
     Args:
-        - model (torch.nn.Module): the model to be trained
-        - datasets (tuple): contains 3 datasets (TweetsBaseDataset)
+        model (torch.nn.Module): the model to be trained
+        datasets (tuple): contains 3 datasets (TweetsBaseDataset)
             corresponding to train, dev and test splits
-        - batch_size (int): mini-batch size for training
-        - epochs (int): number of iterations over the training set
-        - learning_rate (float): used in the optimizer
-        - metadata (dict): contains keys and values of any type with a valid
+        batch_size (int): mini-batch size for training
+        epochs (int): number of iterations over the training set
+        learning_rate (float): used in the optimizer
+        weight_decay (float): regularization factor for the optimizer
+        metadata (dict): contains keys and values of any type with a valid
             string representation, which are saved for visualization in
-            Tensorboard. Use to log model name and hyperparameters.
-        - checkpoint (.pt file path): Load the existing checkpoint
+            TensorBoard. Use to log model name and hyperparameters
+        weights (dict): maps strings to weights (torch.tensor) to be
+            visualized as histograms in TensorBoard
+        checkpoint (str): path of an existing checkpoint (.pt) file
+    Returns:
+        tuple, containing best validation F1 score and test F1 score
     """
     train_set, dev_set, test_set = datasets
-
     train_loader = DataLoader(train_set, batch_size, shuffle=True,
                               num_workers=4,
                               collate_fn=TweetsBaseDataset.collate_fn)
@@ -93,21 +96,30 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
     if checkpoint is not None:
         load_model(model, optimizer, checkpoint, eval_model=False)
 
+    # A writer to save TensorBoard events
     writer = SummaryWriter()
+    logdir = writer.file_writer.get_logdir()
 
     # Write hyperparameters to summary
     if metadata is None:
         metadata = {}
     metadata['Batch size'] = batch_size
     metadata['Learning rate'] = learning_rate
-    text_summary = build_text_summary(metadata)
+    text_summary = _build_text_summary(metadata)
     writer.add_text('metadata', text_summary)
 
-    for epoch in range(epochs):
+    best_score = 0
+    best_ckpt_link = os.path.join(logdir, 'best-ckpt.pt')
+
+    steps = 0
+    for epoch in range(1, epochs + 1):
+        model.train()
         print('Epoch {:d}/{:d}'.format(epoch, epochs))
         n_batches = 0
         for inputs, labels, lengths in train_loader:
+            steps += 1
             n_batches += 1
+
             inputs = inputs.to(device)
             labels = labels.to(device)
             lengths = lengths.to(device)
@@ -123,16 +135,20 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
             loss.backward()
             optimizer.step()
 
-            # Evaluate on training set
-            if n_batches % 10 == 0:
+            # Log scores on training set
+            if n_batches % 100 == 0:
                 f1 = get_score(outputs, labels, score='f1_score')
                 print("\r{}/{}: loss = {:.4f}, f1_score = {:.4f}".format(
                     n_batches, len(train_loader), loss, f1),
                     end='', flush=True)
 
-                # Write to Tensorboard
-                writer.add_scalar('training/loss', loss, n_batches)
-                writer.add_scalar('training/f1_score', f1, n_batches)
+                # Write metrics to TensorBoard
+                writer.add_scalar('training/loss', loss, steps)
+                writer.add_scalar('training/f1_score', f1, steps)
+                # Write histograms
+                if weights is not None:
+                    for name, data in weights.items():
+                        writer.add_histogram('weights/' + name, data, steps)
 
         # Evaluate on dev set
         eval_loss, eval_f1 = evaluate(model, criterion, dev_set)
@@ -140,13 +156,21 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
             eval_loss, eval_f1))
 
         # Write to Tensorboard
-        writer.add_scalar('validation/loss', eval_loss, epoch)
-        writer.add_scalar('validation/f1_score', eval_f1, epoch)
+        writer.add_scalar('validation/loss', eval_loss, steps)
+        writer.add_scalar('validation/f1_score', eval_f1, steps)
 
         # Save the checkpoint
-        save_model(model, optimizer, epoch, 'checkpoint.pt')
+        ckpt_path = os.path.join(logdir, 'ckpt-{:d}.pt'.format(epoch))
+        save_model(model, optimizer, epoch, ckpt_path)
 
-    print("Training Completed")
+        # Create a symbolic link to the best model
+        if eval_f1 > best_score:
+            best_score = eval_f1
+            if os.path.islink(best_ckpt_link):
+                os.unlink(best_ckpt_link)
+            os.symlink(os.path.basename(ckpt_path), best_ckpt_link)
+
+    print("Training Completed. Evaluating on test set...")
 
     # Evaluate on test set
     test_loss, test_f1 = evaluate(model, criterion, test_set)
@@ -157,16 +181,16 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
     writer.add_scalar('test/loss', test_loss, 0)
     writer.add_scalar('test/f1_score', test_f1, 0)
 
+    return best_score, test_f1
 
-def save_model(model, optimizer, epoch, checkpoint):
+def save_model(model, optimizer, epoch, path):
     torch.save({
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
-        'epoch': epoch}, os.path.join(CHECKPOINT_PATH, epoch, checkpoint))
-
+        'epoch': epoch}, path)
 
 def load_model(model, optimizer, checkpoint, eval_model=True):
-    checkpoint = torch.load(os.path.join(CHECKPOINT_PATH, checkpoint))
+    checkpoint = torch.load(checkpoint)
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     epoch = checkpoint['epoch']
@@ -178,8 +202,7 @@ def load_model(model, optimizer, checkpoint, eval_model=True):
 
     return model, optimizer, epoch
 
-
-def build_text_summary(metadata):
+def _build_text_summary(metadata):
     text_summary = ""
     for key, value in metadata.items():
         text_summary += '**' + key + ':** ' + str(value) + '</br>'

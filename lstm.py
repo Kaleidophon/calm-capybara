@@ -43,5 +43,8 @@ if __name__ == '__main__':
     datasets = (train_set, dev_set, test_set)
 
     metadata = {'Model name': 'basic LSTM'}
-    train_model(model, datasets, batch_size=32, epochs=20,
-                learning_rate=1e-3, metadata=metadata)
+    val_score, test_score = train_model(model, datasets, batch_size=32, epochs=20,
+                                learning_rate=1e-3, metadata=metadata,
+                                weights={'linear': model.linear.weight.data})
+
+    print(val_score, test_score)
