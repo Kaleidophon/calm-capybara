@@ -1,8 +1,9 @@
 """
 Training and evaluation functions for the emoji prediction task
 """
-# Torch modules
 import os
+
+# Torch modules
 import torch
 import torch.optim as optim
 import torch.nn as nn
@@ -12,6 +13,7 @@ from torch.utils.data import DataLoader
 from tweet_data import TweetsBOWDataset, TweetsBaseDataset
 
 from sklearn.metrics import accuracy_score, f1_score
+import numpy as np
 from tensorboardX import SummaryWriter
 
 # Directory in which tweet data is saved
@@ -42,11 +44,14 @@ def get_score(logits, targets, score='f1_score'):
 def evaluate(model, criterion, eval_data):
     model.eval()
     mean_loss = 0
-    mean_f1 = 0
 
     # Load the test data
     data_loader = DataLoader(eval_data, collate_fn=TweetsBaseDataset.collate_fn,
                              batch_size=TEST_BATCH_SIZE, shuffle=True)
+
+    y_true = np.empty(len(eval_data))
+    y_pred = np.empty(len(eval_data))
+    counter = 0
 
     with torch.no_grad():
         for inputs, labels, lengths in data_loader:
@@ -59,10 +64,15 @@ def evaluate(model, criterion, eval_data):
             loss = criterion(outputs, labels)
             mean_loss += loss.item()/len(data_loader)
 
-            f1 = get_score(outputs, labels, 'f1_score')
-            mean_f1 += f1/len(data_loader)
+            predictions = torch.argmax(outputs, dim=1).data.cpu().numpy()
+            y_pred[counter:counter + len(labels)] = predictions
+            y_true[counter:counter + len(labels)] = labels.data.cpu().numpy()
 
-    return mean_loss, mean_f1
+            counter += len(labels)
+
+    f1 = f1_score(y_true, y_pred, average='macro')
+
+    return mean_loss, f1
 
 def train_model(model, datasets, batch_size, epochs, learning_rate,
                 weight_decay=0, metadata=None, weights=None, checkpoint=None):
