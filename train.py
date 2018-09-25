@@ -206,5 +206,5 @@ def load_model(model, optimizer, checkpoint, eval_model=True):
 def _build_text_summary(metadata):
     text_summary = ""
     for key, value in metadata.items():
-        text_summary += '**' + key + ':** ' + str(value) + '</br>'
+        text_summary += '**' + str(key) + ':** ' + str(value) + '</br>'
     return text_summary
