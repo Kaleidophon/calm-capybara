@@ -2,6 +2,7 @@
 Training and evaluation functions for the emoji prediction task
 """
 # Torch modules
+import os
 import torch
 import torch.optim as optim
 import torch.nn as nn
@@ -15,6 +16,7 @@ from tensorboardX import SummaryWriter
 
 # Directory in which tweet data is saved
 DATA_DIR_DEFAULT = './data'
+CHECKPOINT_PATH = './Checkpoints/'
 
 TEST_BATCH_SIZE = 128
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -63,7 +65,7 @@ def evaluate(model, criterion, eval_data):
     return mean_loss, mean_f1
 
 def train_model(model, datasets, batch_size, epochs, learning_rate,
-                metadata=None):
+                metadata=None, checkpoint=None):
     """
     Train a sequence model on the Emoji Dataset.
     Args:
@@ -76,6 +78,7 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
         - metadata (dict): contains keys and values of any type with a valid
             string representation, which are saved for visualization in
             Tensorboard. Use to log model name and hyperparameters.
+        - checkpoint (.pt file path): Load the existing checkpoint
     """
     train_set, dev_set, test_set = datasets
 
@@ -86,6 +89,9 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
     model.to(device)
     criterion = nn.CrossEntropyLoss().to(device)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+    if checkpoint is not None:
+        load_model(model, optimizer, checkpoint, eval_model=False)
 
     writer = SummaryWriter()
 
@@ -137,7 +143,8 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
         writer.add_scalar('validation/loss', eval_loss, epoch)
         writer.add_scalar('validation/f1_score', eval_f1, epoch)
 
-        # TODO: Checkpoint
+        # Save the checkpoint
+        save_model(model, optimizer, epoch, 'checkpoint.pt')
 
     print("Training Completed")
 
@@ -149,6 +156,28 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
     # Write to Tensorboard
     writer.add_scalar('test/loss', test_loss, 0)
     writer.add_scalar('test/f1_score', test_f1, 0)
+
+
+def save_model(model, optimizer, epoch, checkpoint):
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'epoch': epoch}, os.path.join(CHECKPOINT_PATH, epoch, checkpoint))
+
+
+def load_model(model, optimizer, checkpoint, eval_model=True):
+    checkpoint = torch.load(os.path.join(CHECKPOINT_PATH, checkpoint))
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    epoch = checkpoint['epoch']
+
+    if eval_model:
+        model.eval()
+    else:
+        model.train()
+
+    return model, optimizer, epoch
+
 
 def build_text_summary(metadata):
     text_summary = ""
