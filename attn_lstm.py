@@ -20,9 +20,9 @@ class Attention(nn.Module):
         return context
 
 
-class LSTMClassifier(nn.Module):
+class AttentionLSTMClassifier(nn.Module):
     def __init__(self, embeddings, n_classes=20, dropout=0):
-        super(LSTMClassifier, self).__init__()
+        super(AttentionLSTMClassifier, self).__init__()
         num_embeddings, embedding_dim = embeddings.shape
         self.embeddings = nn.Embedding(num_embeddings,
                                        embedding_dim,
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     embeddings_dir = './embeddings'
 
     embeddings = np.load(os.path.join(embeddings_dir, 'embeddings.npy'))
-    model = LSTMClassifier(embeddings)
+    model = AttentionLSTMClassifier(embeddings)
 
     data_dir = './data'
     train_set = TweetsBaseDataset.load(os.path.join(data_dir, 'train',
