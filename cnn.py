@@ -17,13 +17,17 @@ from tweet_data import TweetsBaseDataset
 
 class CNNClassifier(nn.Module):
 
-    def __init__(self, embeddings, num_kernels=3, n_classes=20, dropout=0.5, train_embeddings=False):
+    def __init__(self, embeddings, num_kernels=3, n_classes=20, dropout=0.5, use_pretrained_embeddings=False,
+                 train_embeddings=False):
         super().__init__()
 
         # Initialize embeddings - take pre-trained ones (or not) and determine whether they should be trained further
         num_embeddings, embedding_dim = embeddings.shape
 
-        self.embeddings = nn.Embedding(num_embeddings, embedding_dim, _weight=torch.from_numpy(embeddings))
+        if use_pretrained_embeddings:
+            self.embeddings = nn.Embedding(num_embeddings, embedding_dim, _weight=torch.from_numpy(embeddings))
+        else:
+            self.embeddings = nn.Embedding(num_embeddings, embedding_dim)
         self.embeddings.weight.requires_grad = train_embeddings
 
         # Initialize convolutional layers
@@ -72,8 +76,8 @@ class CNNClassifier(nn.Module):
 
 
 if __name__ == "__main__":
-    # Load data sets
-    root_dir = "/dlnlt/calm-capybara"
+    # Load data sets~
+    root_dir = "~/dlnlt/calm-capybara"
     english_train = TweetsBaseDataset.load(root_dir + "/data/train/us_bow_train.set")
     english_test = TweetsBaseDataset.load(root_dir + "/data/test/us_bow_test.set")
     english_dev = TweetsBaseDataset.load(root_dir + "/data/dev/us_trial.set")
@@ -83,7 +87,10 @@ if __name__ == "__main__":
     embeddings = np.load(os.path.join(embeddings_dir, 'embeddings.npy'))
 
     # Init model and begin training
-    model = CNNClassifier(embeddings, train_embeddings=True, num_kernels=12)
-    metadata = {'Model name': 'CNN'}
+    model = CNNClassifier(embeddings, train_embeddings=True, use_pretrained_embeddings=False, num_kernels=1)
+    metadata = {
+        "Model name": "CNN", "embeddings": "Trained from scratch", "Num filters": 1, "Num linear": 1,
+        "Regularization": "Dropout"
+    }
 
     train_model(model, datasets, batch_size=128, epochs=60, learning_rate=1e-3, metadata=metadata)
