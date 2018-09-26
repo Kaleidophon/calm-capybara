@@ -10,7 +10,7 @@ import itertools
 class BiLSTMClassifier(nn.Module):
     def __init__(self, embeddings, n_classes=20, emb_dropout=0.0,
                  lstm_dropout=0.0):
-        super(biLSTMClassifier, self).__init__()
+        super(BiLSTMClassifier, self).__init__()
 
         num_embeddings, embedding_dim = embeddings.shape
         self.embeddings = nn.Embedding(num_embeddings,
@@ -59,7 +59,7 @@ if __name__ == '__main__':
                     'learning_rate': 1e-2}
 
     for ed, ld, lr in itertools.product(emb_dropout, lstm_dropout, learning_rate):
-        model = biLSTMClassifier(embeddings, emb_dropout=ed, lstm_dropout=ld)
+        model = BiLSTMClassifier(embeddings, emb_dropout=ed, lstm_dropout=ld)
 
         metadata = {'Model name': 'BiLSTM',
                     'Embeddings dropout': ed,
