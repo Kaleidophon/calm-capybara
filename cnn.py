@@ -73,16 +73,17 @@ class CNNClassifier(nn.Module):
 
 if __name__ == "__main__":
     # Load data sets
-    english_train = TweetsBaseDataset.load("data/train/us_bow_train.set")
-    english_test = TweetsBaseDataset.load("data/test/us_bow_test.set")
-    english_dev = TweetsBaseDataset.load("data/dev/us_trial.set")
+    root_dir = "/dlnlt/calm-capybara"
+    english_train = TweetsBaseDataset.load(root_dir + "/data/train/us_bow_train.set")
+    english_test = TweetsBaseDataset.load(root_dir + "/data/test/us_bow_test.set")
+    english_dev = TweetsBaseDataset.load(root_dir + "/data/dev/us_trial.set")
     datasets = (english_train, english_dev, english_test)
 
-    embeddings_dir = './embeddings'
+    embeddings_dir = root_dir + '/embeddings'
     embeddings = np.load(os.path.join(embeddings_dir, 'embeddings.npy'))
 
     # Init model and begin training
-    model = CNNClassifier(embeddings, train_embeddings=True, num_kernels=9)
+    model = CNNClassifier(embeddings, train_embeddings=True, num_kernels=12)
     metadata = {'Model name': 'CNN'}
 
-    train_model(model, datasets, batch_size=128, epochs=40, learning_rate=1e-3, metadata=metadata)
+    train_model(model, datasets, batch_size=128, epochs=60, learning_rate=1e-3, metadata=metadata)
