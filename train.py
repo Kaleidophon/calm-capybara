@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 # Data loading modules
 from tweet_data import TweetsBOWDataset, TweetsBaseDataset
 
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import f1_score, precision_score, recall_score
 import numpy as np
 from tensorboardX import SummaryWriter
 
@@ -22,9 +22,9 @@ DATA_DIR_DEFAULT = './data'
 TEST_BATCH_SIZE = 256
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def get_score(logits, targets, score='f1_score'):
+def _get_score(logits, targets):
     """
-    Computes the score of the network.
+    Computes the score of the network given output logits.
     Args:
         - logits (tensor): predictions of the model.
             shape (n_batches, n_classes)
@@ -36,12 +36,29 @@ def get_score(logits, targets, score='f1_score'):
     targets = targets.data.cpu().numpy()
     predictions = torch.argmax(logits, dim=1).data.cpu().numpy()
 
-    if score == 'accuracy':
-        return accuracy_score(targets, predictions)
-    elif score == 'f1_score':
-        return f1_score(targets, predictions, average='macro')
+    return f1_score(targets, predictions, average='macro')
 
-def evaluate(model, criterion, eval_data):
+def evaluate(model, criterion, eval_data, score='f1_score'):
+    """
+    Calculate a classification score of the model on a given dataset.
+    Args:
+        model (torch.nn.Module): the model to evaluate
+        criterion (torch.nn.CrossEntropyLoss): used to calculate the loss
+        eval_data (TweetsBaseDataset): dataset on which to evaluate the model
+        score (str): one of 'f1_score', 'precision', 'recall'
+    Returns:
+        mean_loss (float), mean loss on the dataset
+        score (float)
+    """
+    if score == 'f1_score':
+        score_fn = f1_score
+    elif score == 'precision':
+        score_fn = precision_score
+    elif score == 'recall':
+        score_fn = recall_score
+    else:
+        raise ValueError('Invalid score: {}'.format(score))
+
     model.eval()
     mean_loss = 0
 
@@ -70,9 +87,9 @@ def evaluate(model, criterion, eval_data):
 
             counter += len(labels)
 
-    f1 = f1_score(y_true, y_pred, average='macro')
+    score = score_fn(y_true, y_pred, average='macro')
 
-    return mean_loss, f1
+    return mean_loss, score
 
 def train_model(model, datasets, batch_size, epochs, learning_rate,
                 weight_decay=0, metadata=None, weights=None, checkpoint=None):
@@ -148,7 +165,7 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
 
             # Log scores on training set
             if n_batches % 100 == 0:
-                f1 = get_score(outputs, labels, score='f1_score')
+                f1 = _get_score(outputs, labels)
                 print("\r{}/{}: loss = {:.4f}, f1_score = {:.4f}".format(
                     n_batches, len(train_loader), loss, f1),
                     end='', flush=True)
