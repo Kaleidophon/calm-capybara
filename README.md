@@ -20,6 +20,7 @@ on the test set.
 |------:|:----------|:-------|:---------|
 |Bag-of-Words + Logistic Regression | 0.3450 | 0.3069 | 0.3129 |
 |Bag-of-Words + SVM  | 0.2586 | 0.2681 | 0.2549 |
+|FastText|    -     |  -  | 0.43
 
 #### Spanish
 
