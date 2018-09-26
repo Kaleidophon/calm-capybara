@@ -7,7 +7,7 @@ from train import train_model
 from tweet_data import TweetsBaseDataset
 import itertools
 
-class biLSTMClassifier(nn.Module):
+class BiLSTMClassifier(nn.Module):
     def __init__(self, embeddings, n_classes=20, emb_dropout=0.0,
                  lstm_dropout=0.0):
         super(biLSTMClassifier, self).__init__()
