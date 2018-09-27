@@ -198,11 +198,13 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
 
     return best_score, test_f1
 
+
 def save_model(model, optimizer, epoch, path):
     torch.save({
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'epoch': epoch}, path)
+
 
 def load_model(model, optimizer, checkpoint, eval_model=True):
     checkpoint = torch.load(checkpoint)
@@ -216,6 +218,7 @@ def load_model(model, optimizer, checkpoint, eval_model=True):
         model.train()
 
     return model, optimizer, epoch
+
 
 def _build_text_summary(metadata):
     text_summary = ""

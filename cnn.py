@@ -77,7 +77,8 @@ class CNNClassifier(nn.Module):
 
 if __name__ == "__main__":
     # Load data sets~
-    root_dir = "~/dlnlt/calm-capybara"
+    root_dir = "/home/lgpu0111/dlnlt/calm-capybara"
+    #root_dir = "."
     english_train = TweetsBaseDataset.load(root_dir + "/data/train/us_bow_train.set")
     english_test = TweetsBaseDataset.load(root_dir + "/data/test/us_bow_test.set")
     english_dev = TweetsBaseDataset.load(root_dir + "/data/dev/us_trial.set")
@@ -87,10 +88,12 @@ if __name__ == "__main__":
     embeddings = np.load(os.path.join(embeddings_dir, 'embeddings.npy'))
 
     # Init model and begin training
-    model = CNNClassifier(embeddings, train_embeddings=True, use_pretrained_embeddings=False, num_kernels=1)
+    model = CNNClassifier(embeddings, train_embeddings=True, use_pretrained_embeddings=False, num_kernels=12)
     metadata = {
-        "Model name": "CNN", "embeddings": "Trained from scratch", "Num filters": 1, "Num linear": 1,
+        "Model name": "Best CNN", "embeddings": "Train from scratch", "Num filters": 12, "Num linear": 1,
         "Regularization": "Dropout"
     }
+    print(metadata)
 
-    train_model(model, datasets, batch_size=128, epochs=60, learning_rate=1e-3, metadata=metadata)
+    torch.manual_seed(42)
+    train_model(model, datasets, batch_size=256, epochs=60, learning_rate=1e-3, metadata=metadata)
