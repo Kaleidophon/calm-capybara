@@ -36,11 +36,11 @@ if __name__ == '__main__':
 
     data_dir = './data'
     train_set = TweetsBaseDataset.load(os.path.join(data_dir, 'train',
-            'us_bow_train.set'))
+            'us_train.set'))
     dev_set = TweetsBaseDataset.load(os.path.join(data_dir, 'dev',
-            'us_bow_trial.set'))
+            'us_trial.set'))
     test_set = TweetsBaseDataset.load(os.path.join(data_dir, 'test',
-            'us_bow_test.set'))
+            'us_test.set'))
 
     datasets = (train_set, dev_set, test_set)
 

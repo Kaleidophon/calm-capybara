@@ -49,7 +49,7 @@ if __name__ == '__main__':
     embeddings_dir = './embeddings'
 
     train_set = TweetsBaseDataset.load(
-        os.path.join(data_dir, 'train', 'us_bow_train.set'))
+        os.path.join(data_dir, 'train', 'us_train.set'))
 
     embeddings = get_embeddings(os.path.join(embeddings_dir,
                     'ntua_twitter_300.txt'), train_set.vocabulary)
