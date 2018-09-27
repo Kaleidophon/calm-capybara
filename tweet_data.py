@@ -16,6 +16,7 @@ LABELS_EXT = '.labels'
 UNK_SYMBOL = "<UNK>"
 PAD_SYMBOL = "<PAD>"
 
+
 class TweetsBaseDataset(data.Dataset):
     """ A Dataset class for the emoji prediction task. The base class reads
     the file to prepare a vocabulary that is then used for specialized
@@ -157,6 +158,7 @@ class TweetsBOWDataset(TweetsBaseDataset):
         print('Creating TF-ID matrix')
         self.data = TfidfTransformer().fit_transform(count_matrix)
 
+
 if __name__ == '__main__':
     # When run as a script all datasets are loaded, processed and serialized
     from ekphrasis.classes.preprocessor import TextPreProcessor
@@ -195,7 +197,7 @@ if __name__ == '__main__':
     dev_set = TweetsBaseDataset(os.path.join(data_dir, 'dev'),
                                 'us_trial', text_processor.pre_process_doc,
                                 vocabulary=train_set.vocabulary)
-    dev_set.dump(os.path.join(data_dir, 'dev', 'us_trial.set'))
+    dev_set.dump(os.path.join(data_dir, 'dev', 'us_bow_trial.set'))
 
     test_set = TweetsBaseDataset(os.path.join(data_dir, 'test'),
                                 'us_test', text_processor.pre_process_doc,
