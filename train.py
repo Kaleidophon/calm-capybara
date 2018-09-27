@@ -208,8 +208,10 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
 
         # Evaluate on test set
         test_loss, test_f1 = evaluate(model, criterion, test_set)
-        print("\ntest loss = {:.4f}, test f1_score = {:.4f}".format(
-            test_loss, test_f1))
+        _, test_precision = evaluate(model, criterion, test_set, score="precision")
+        _, test_recall = evaluate(model, criterion, test_set, score="recall")
+        print("\ntest loss = {:.4f}, test f1_score = {:.4f}, test precision = {:.4f}, test recall = {:.4f}".format(
+            test_loss, test_f1, test_precision, test_recall))
 
         # Write to Tensorboard
         writer.add_scalar('test/loss', test_loss, 0)

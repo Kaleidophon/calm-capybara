@@ -77,8 +77,7 @@ class CNNClassifier(nn.Module):
 
 if __name__ == "__main__":
     # Load data sets~
-    root_dir = "/home/lgpu0111/dlnlt/calm-capybara"
-    #root_dir = "."
+    root_dir = "."
     english_train = TweetsBaseDataset.load(root_dir + "/data/train/us_bow_train.set")
     english_test = TweetsBaseDataset.load(root_dir + "/data/test/us_bow_test.set")
     english_dev = TweetsBaseDataset.load(root_dir + "/data/dev/us_trial.set")
@@ -95,5 +94,5 @@ if __name__ == "__main__":
     }
     print(metadata)
 
-    torch.manual_seed(42)
+    #torch.manual_seed(42)
     train_model(model, datasets, batch_size=256, epochs=60, learning_rate=1e-3, metadata=metadata)

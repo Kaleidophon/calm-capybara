@@ -20,6 +20,7 @@ on the test set.
 |------:|:----------|:-------|:---------|
 |Bag-of-Words + Logistic Regression | 0.3450 | 0.3069 | 0.3129 |
 |Bag-of-Words + SVM  | 0.2586 | 0.2681 | 0.2549 |
+| CNN | 0.3770 | 0.2809 | 0.2798 |
 
 #### Spanish
 
@@ -28,8 +29,6 @@ on the test set.
 
 
 ### Usage
-
-[TODO. Explain how to use the whole thing]
 
 1. Install the dependencies with
 
