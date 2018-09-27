@@ -8,8 +8,10 @@ Master Artificial Intelligence program during the winter term 2018/2019.
 This SemEval shared tasks aims to explore the predictability of emojis, small ideograms depicting objects, people and
 scenes, given the tweet they were used in. An example tweet from the data set is the following:
 
-    Addicted to #avocado toast. @ Kitchen :heart_eyes:
-    
+---
+Addicted to #avocado toast. @ Kitchen :heart_eyes:
+
+--- 
 Only tweets with one emoji were included in the data set. No meta data is given. Because only tweets with one of the 20 
 most frequent emojis in English or Spanish respectively were selected, this task can be seen as a form of multi-label 
 classification. The tweets were gathered between October 2015 and February 2017. For more information 
