@@ -50,13 +50,13 @@ if __name__ == '__main__':
     # Hyperparameter search
     emb_dropout = [0.0, 0.1, 0.3, 0.5]
     lstm_dropout = [0.0, 0.1, 0.3, 0.5]
-    learning_rate = [1e-2, 1e-3, 1e-4]
+    learning_rate = [1e-3, 1e-4]
 
     best_val_score = 0
     best_test_score = 0
     best_hparams = {'emb_dropout': 0.0,
                     'lstm_dropout': 0.0,
-                    'learning_rate': 1e-2}
+                    'learning_rate': 1e-3}
 
     for ed, ld, lr in itertools.product(emb_dropout, lstm_dropout, learning_rate):
         model = BiLSTMClassifier(embeddings, emb_dropout=ed, lstm_dropout=ld)
@@ -66,7 +66,7 @@ if __name__ == '__main__':
                     'LSTM dropout': ld}
 
         val_score, test_score = train_model(model, datasets, batch_size=32,
-            epochs=20, learning_rate=lr, metadata=metadata,
+            epochs=10, learning_rate=lr, metadata=metadata,
             weights={'linear': model.linear.weight.data})
 
         if val_score > best_val_score:
