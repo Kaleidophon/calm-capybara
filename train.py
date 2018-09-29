@@ -122,7 +122,7 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
                            weight_decay=weight_decay)
 
     if checkpoint is not None:
-        load_model(model, optimizer, checkpoint, eval_model=False)
+        load_training_state(model, optimizer, checkpoint, eval_model=False)
 
     # A writer to save TensorBoard events
     writer = SummaryWriter()
@@ -222,7 +222,7 @@ def save_model(model, optimizer, epoch, path):
         'optimizer_state_dict': optimizer.state_dict(),
         'epoch': epoch}, path)
 
-def load_model(model, optimizer, checkpoint, eval_model=True):
+def load_training_state(model, optimizer, checkpoint, eval_model=True):
     checkpoint = torch.load(checkpoint)
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -234,6 +234,12 @@ def load_model(model, optimizer, checkpoint, eval_model=True):
         model.train()
 
     return model, optimizer, epoch
+
+def load_model(model, checkpoint, eval_model=True):
+    checkpoint = torch.load(checkpoint, map_location='cpu')
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model.eval()
+    return model
 
 def _build_text_summary(metadata):
     text_summary = ""
