@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 import numpy as np
 from scipy.sparse import lil_matrix
 from sklearn.externals import joblib
+from collections import OrderedDict
 
 TEXT_EXT = '.text'
 LABELS_EXT = '.labels'
@@ -157,6 +158,19 @@ class TweetsBOWDataset(TweetsBaseDataset):
         # Add tf-idf weighting
         print('Creating TF-ID matrix')
         self.data = TfidfTransformer().fit_transform(count_matrix)
+
+def get_mapping(filename):
+    """Read a mapping from emoji IDs to character.
+    Args:
+        filename (str): location of the mapping file
+    Returns: dict, mapping id (int) to character (str)
+    """
+    id_to_emoji = OrderedDict()
+    with open(filename) as file:
+        for line in file:
+            values = line.split()
+            id_to_emoji[int(values[0])] = values[1]
+    return id_to_emoji
 
 if __name__ == '__main__':
     # When run as a script all datasets are loaded, processed and serialized
