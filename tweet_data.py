@@ -86,7 +86,7 @@ class TweetsBaseDataset(data.Dataset):
         return len(self.text_ids)
 
     @staticmethod
-    def collate_fn(data_list, batch_first=False):
+    def collate_fn(data_list):
         """
         Prepare a batch from a list of samples.
         Args:
@@ -109,7 +109,7 @@ class TweetsBaseDataset(data.Dataset):
         sorted_lengths = torch.tensor(lengths[sorted_idx], dtype=torch.long)
 
         # Create padded batch
-        padded_data = pad_sequence(sorted_data, batch_first)
+        padded_data = pad_sequence(sorted_data)
 
         return padded_data, sorted_labels, sorted_lengths
 
