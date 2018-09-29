@@ -71,7 +71,7 @@ def evaluate(model, criterion, eval_data, score='f1_score'):
     counter = 0
 
     with torch.no_grad():
-        for inputs, labels, lengths in data_loader:
+        for inputs, labels, lengths, indices in data_loader:
             inputs = inputs.to(device)
             labels = labels.to(device)
             lengths = lengths.to(device)
@@ -146,7 +146,7 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
             model.train()
             print('Epoch {:d}/{:d}'.format(epoch, epochs))
             n_batches = 0
-            for inputs, labels, lengths in train_loader:
+            for inputs, labels, lengths, indices in train_loader:
                 steps += 1
                 n_batches += 1
 

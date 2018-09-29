@@ -80,7 +80,7 @@ class TweetsBaseDataset(data.Dataset):
 
     def __getitem__(self, index):
         return (torch.tensor(self.text_ids[index], dtype=torch.long),
-                torch.tensor(self.labels[index], dtype=torch.long))
+                torch.tensor(self.labels[index], dtype=torch.long), index)
 
     def __len__(self):
         return len(self.text_ids)
@@ -98,7 +98,7 @@ class TweetsBaseDataset(data.Dataset):
             - lengths (tensor): length of each sequence in the batch
         """
         # Separate token indices and labels
-        data, labels = zip(*data_list)
+        data, labels, indices = zip(*data_list)
 
         # Get length of each tensor
         lengths = np.array([len(tensor) for tensor in data])
@@ -107,11 +107,12 @@ class TweetsBaseDataset(data.Dataset):
         sorted_data = [data[idx] for idx in sorted_idx]
         sorted_labels = torch.stack([labels[idx] for idx in sorted_idx])
         sorted_lengths = torch.tensor(lengths[sorted_idx], dtype=torch.long)
+        sorted_indices = [indices[idx] for idx in sorted_idx]
 
         # Create padded batch
         padded_data = pad_sequence(sorted_data)
 
-        return padded_data, sorted_labels, sorted_lengths
+        return padded_data, sorted_labels, sorted_lengths, sorted_indices
 
     def dump(self, filename):
         """ Save dataset to disk using the provided file name (str) """
