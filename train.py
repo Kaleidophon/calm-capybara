@@ -238,7 +238,10 @@ def load_training_state(model, optimizer, checkpoint, eval_model=True):
 def load_model(model, checkpoint, eval_model=True):
     checkpoint = torch.load(checkpoint, map_location='cpu')
     model.load_state_dict(checkpoint['model_state_dict'])
-    model.eval()
+    if eval_model:
+        model.eval()
+    else:
+        model.train()
     return model
 
 def _build_text_summary(metadata):
