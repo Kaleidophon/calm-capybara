@@ -2,6 +2,7 @@ import os
 import numpy as np
 from tweet_data import TweetsBaseDataset
 
+
 def get_embeddings(filename, vocabulary, dim=300):
     """
     Load pretrained embeddings of words in a vocabulary from a text file.
