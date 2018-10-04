@@ -73,21 +73,24 @@ class CNNClassifier(nn.Module):
         out = self.linear(c)
 
         return out
-
+# num filters
+# pretrained or not
+# num linear layers
+# dropout
 
 if __name__ == "__main__":
     # Load data sets~
     root_dir = "."
-    english_train = TweetsBaseDataset.load(root_dir + "/data/train/us_bow_train.set")
-    english_test = TweetsBaseDataset.load(root_dir + "/data/test/us_bow_test.set")
+    english_train = TweetsBaseDataset.load(root_dir + "/data/train/us_train.set")
     english_dev = TweetsBaseDataset.load(root_dir + "/data/dev/us_trial.set")
+    english_test = TweetsBaseDataset.load(root_dir + "/data/test/us_test.set")
     datasets = (english_train, english_dev, english_test)
 
     embeddings_dir = root_dir + '/embeddings'
     embeddings = np.load(os.path.join(embeddings_dir, 'embeddings.npy'))
 
     # Init model and begin training
-    model = CNNClassifier(embeddings, train_embeddings=True, use_pretrained_embeddings=False, num_kernels=12)
+    model = CNNClassifier(embeddings, train_embeddings=True, use_pretrained_embeddings=True, num_kernels=12)
     metadata = {
         "Model name": "Best CNN", "embeddings": "Train from scratch", "Num filters": 12, "Num linear": 1,
         "Regularization": "Dropout"
