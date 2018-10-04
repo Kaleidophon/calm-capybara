@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 import numpy as np
 from scipy.sparse import lil_matrix
 from sklearn.externals import joblib
+from collections import OrderedDict
 
 TEXT_EXT = '.text'
 LABELS_EXT = '.labels'
@@ -81,13 +82,13 @@ class TweetsBaseDataset(data.Dataset):
 
     def __getitem__(self, index):
         return (torch.tensor(self.text_ids[index], dtype=torch.long),
-                torch.tensor(self.labels[index], dtype=torch.long))
+                torch.tensor(self.labels[index], dtype=torch.long), index)
 
     def __len__(self):
         return len(self.text_ids)
 
     @staticmethod
-    def collate_fn(data_list, batch_first=False):
+    def collate_fn(data_list):
         """
         Prepare a batch from a list of samples.
         Args:
@@ -99,7 +100,7 @@ class TweetsBaseDataset(data.Dataset):
             - lengths (tensor): length of each sequence in the batch
         """
         # Separate token indices and labels
-        data, labels = zip(*data_list)
+        data, labels, indices = zip(*data_list)
 
         # Get length of each tensor
         lengths = np.array([len(tensor) for tensor in data])
@@ -108,11 +109,12 @@ class TweetsBaseDataset(data.Dataset):
         sorted_data = [data[idx] for idx in sorted_idx]
         sorted_labels = torch.stack([labels[idx] for idx in sorted_idx])
         sorted_lengths = torch.tensor(lengths[sorted_idx], dtype=torch.long)
+        sorted_indices = [indices[idx] for idx in sorted_idx]
 
         # Create padded batch
-        padded_data = pad_sequence(sorted_data, batch_first)
+        padded_data = pad_sequence(sorted_data)
 
-        return padded_data, sorted_labels, sorted_lengths
+        return padded_data, sorted_labels, sorted_lengths, sorted_indices
 
     def dump(self, filename):
         """ Save dataset to disk using the provided file name (str) """
@@ -158,6 +160,18 @@ class TweetsBOWDataset(TweetsBaseDataset):
         print('Creating TF-ID matrix')
         self.data = TfidfTransformer().fit_transform(count_matrix)
 
+def get_mapping(filename):
+    """Read a mapping from emoji IDs to character.
+    Args:
+        filename (str): location of the mapping file
+    Returns: dict, mapping id (int) to character (str)
+    """
+    id_to_emoji = OrderedDict()
+    with open(filename) as file:
+        for line in file:
+            values = line.split()
+            id_to_emoji[int(values[0])] = values[1]
+    return id_to_emoji
 
 if __name__ == '__main__':
     # When run as a script all datasets are loaded, processed and serialized

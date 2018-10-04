@@ -13,4 +13,5 @@ colorama==0.3.9
 termcolor==1.1.0
 tensorflow>=1.5.0
 tensorboardX==1.4
+pandas=0.23.4
 

@@ -74,7 +74,7 @@ def evaluate(model, criterion, eval_data, score='f1_score'):
     counter = 0
 
     with torch.no_grad():
-        for inputs, labels, lengths in data_loader:
+        for inputs, labels, lengths, indices in data_loader:
             inputs = inputs.to(device)
             labels = labels.to(device)
             lengths = lengths.to(device)
@@ -126,7 +126,7 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
                            weight_decay=weight_decay)
 
     if checkpoint is not None:
-        load_model(model, optimizer, checkpoint, eval_model=False)
+        load_training_state(model, optimizer, checkpoint, eval_model=False)
 
     # A writer to save TensorBoard events
     writer = SummaryWriter()
@@ -150,7 +150,7 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
             model.train()
             print('Epoch {:d}/{:d}'.format(epoch, epochs))
             n_batches = 0
-            for inputs, labels, lengths in train_loader:
+            for inputs, labels, lengths, indices in train_loader:
                 steps += 1
                 n_batches += 1
 
@@ -229,8 +229,7 @@ def save_model(model, optimizer, epoch, path):
         'optimizer_state_dict': optimizer.state_dict(),
         'epoch': epoch}, path)
 
-
-def load_model(model, optimizer, checkpoint, eval_model=True):
+def load_training_state(model, optimizer, checkpoint, eval_model=True):
     checkpoint = torch.load(checkpoint)
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -243,6 +242,14 @@ def load_model(model, optimizer, checkpoint, eval_model=True):
 
     return model, optimizer, epoch
 
+def load_model(model, checkpoint, eval_model=True):
+    checkpoint = torch.load(checkpoint, map_location='cpu')
+    model.load_state_dict(checkpoint['model_state_dict'])
+    if eval_model:
+        model.eval()
+    else:
+        model.train()
+    return model
 
 def _build_text_summary(metadata):
     text_summary = ""
