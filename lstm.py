@@ -6,6 +6,7 @@ import numpy as np
 from train import train_model
 from tweet_data import TweetsBaseDataset
 
+
 class LSTMClassifier(nn.Module):
     def __init__(self, embeddings, n_classes=20):
         super(LSTMClassifier, self).__init__()
@@ -25,6 +26,7 @@ class LSTMClassifier(nn.Module):
         # so we remove it before passing it to the linear layer
         logits = self.linear(hidden.view(len(lengths), -1))
         return logits
+
 
 if __name__ == '__main__':
     embeddings_dir = './embeddings'

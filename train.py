@@ -16,11 +16,13 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 import numpy as np
 from tensorboardX import SummaryWriter
 
+
 # Directory in which tweet data is saved
 DATA_DIR_DEFAULT = './data'
 
 TEST_BATCH_SIZE = 256
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 def _get_score(logits, targets):
     """
@@ -37,6 +39,7 @@ def _get_score(logits, targets):
     predictions = torch.argmax(logits, dim=1).data.cpu().numpy()
 
     return f1_score(targets, predictions, average='macro')
+
 
 def evaluate(model, criterion, eval_data, score='f1_score'):
     """
@@ -90,6 +93,7 @@ def evaluate(model, criterion, eval_data, score='f1_score'):
     score = score_fn(y_true, y_pred, average='macro')
 
     return mean_loss, score
+
 
 def train_model(model, datasets, batch_size, epochs, learning_rate,
                 weight_decay=0, metadata=None, weights=None, checkpoint=None):
@@ -204,8 +208,10 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
 
         # Evaluate on test set
         test_loss, test_f1 = evaluate(model, criterion, test_set)
-        print("\ntest loss = {:.4f}, test f1_score = {:.4f}".format(
-            test_loss, test_f1))
+        _, test_precision = evaluate(model, criterion, test_set, score="precision")
+        _, test_recall = evaluate(model, criterion, test_set, score="recall")
+        print("\ntest loss = {:.4f}, test f1_score = {:.4f}, test precision = {:.4f}, test recall = {:.4f}".format(
+            test_loss, test_f1, test_precision, test_recall))
 
         # Write to Tensorboard
         writer.add_scalar('test/loss', test_loss, 0)
@@ -215,6 +221,7 @@ def train_model(model, datasets, batch_size, epochs, learning_rate,
         print('Interrupted training.')
 
     return best_score, test_f1
+
 
 def save_model(model, optimizer, epoch, path):
     torch.save({
