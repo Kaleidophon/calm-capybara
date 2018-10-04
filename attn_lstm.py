@@ -34,7 +34,7 @@ class Attention(nn.Module):
         # Renormalize
         attention = attention/torch.sum(attention, dim=-1, keepdim=True)
         # Return weighted average
-        return torch.sum(x * attention.unsqueeze(-1), dim=1)
+        return torch.sum(x * attention.unsqueeze(-1), dim=1), attention
 
 class AttentionBiLSTMClassifier(nn.Module):
     def __init__(self, embeddings, n_classes=20, emb_dropout=0.0,
@@ -50,7 +50,7 @@ class AttentionBiLSTMClassifier(nn.Module):
         self.attention = Attention(2 * embedding_dim)
         self.linear = nn.Linear(2 * embedding_dim, n_classes)
 
-    def forward(self, inputs, lengths):
+    def forward(self, inputs, lengths, return_attention=False):
         # Get embeddings, including padding
         x = self.embeddings(inputs)
         x = self.emb_dropout(x)
@@ -66,10 +66,14 @@ class AttentionBiLSTMClassifier(nn.Module):
         # so that x.shape = (batch_size, max_seq_len, 2 * emb_dim)
         x = x.permute(1, 0, 2)
         # Use attention layer to get sentence representation
-        x = self.attention(x, lengths)
+        x, attention = self.attention(x, lengths)
 
         logits = self.linear(x)
-        return logits
+
+        if return_attention:
+            return logits, attention
+        else:
+            return logits
 
 if __name__ == '__main__':
     # Load pretrained embeddings
