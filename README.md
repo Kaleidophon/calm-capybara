@@ -30,7 +30,7 @@ library, which supplies Twitter-specific tools for text normalization.
 |------:|:----------|:-------|:---------|
 |Bag-of-Words + Logistic Regression | 0.3450 | 0.3069 | 0.3129 |
 |Bag-of-Words + SVM  | 0.2586 | 0.2681 | 0.2549 |
-| CNN | 0.3770 | 0.2809 | 0.2798 |
+| CNN | 0.3490| 0.2851 | 0.2903 |
 | BiLSTM |  0.3252 | 0.3182 |  0.3187|
 | BiLSTM + Attention | **0.3505**  | **0.3353** | **0.3378** |
 
