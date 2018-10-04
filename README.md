@@ -1,7 +1,7 @@
 ## Comparing different Neural NLP models for the SemEval 2018 Task 2: Multilingual Emoji Prediction
 
 This project was conducted for the *Deep Learning for Natural Language Technologies* course of the Universiteit van Amsterdam's
-Master Artificial Intelligence program during the winter term 2018/2019. 
+Master Artificial Intelligence program during the winter term 2018/2019.
 
 ### Task description
 
@@ -11,32 +11,28 @@ scenes, given the tweet they were used in. An example tweet from the data set is
 ---
 Addicted to #avocado toast. @ Kitchen :heart_eyes:
 
---- 
-Only tweets with one emoji were included in the data set. No meta data is given. Because only tweets with one of the 20 
-most frequent emojis in English or Spanish respectively were selected, this task can be seen as a form of multi-label 
-classification. The tweets were gathered between October 2015 and February 2017. For more information 
+---
+Only tweets with one emoji were included in the data set. No meta data is given. Because only tweets with one of the 20
+most frequent emojis in English or Spanish respectively were selected, this task can be seen as a form of multi-label
+classification. The tweets were gathered between October 2015 and February 2017. For more information
 about the task, consult the original [competition paper](http://www.aclweb.org/anthology/S18-1003).
 
 ### Results
 
-The results are split up for the english and the spanish part of the data set. All models' performances were determined 
-on the test set. Due to limited computational resources, the vocabulary size during training 
+The results are split up for the english and the spanish part of the data set. All models' performances were determined
+on the test set. Due to limited computational resources, the vocabulary size during training
 was limited to 10.000 types. Additionally, the data was pre-processed with the [Ekphrasis](https://github.com/cbaziotis/ekphrasis)
-library, which supplies Twitter-specific tools for text normalization. 
+library, which supplies Twitter-specific tools for text normalization.
 
-#### English 
+#### English
 
 |  Model|Precision |Recall  |F1-score  |
 |------:|:----------|:-------|:---------|
 |Bag-of-Words + Logistic Regression | 0.3450 | 0.3069 | 0.3129 |
 |Bag-of-Words + SVM  | 0.2586 | 0.2681 | 0.2549 |
-|FastText|    -     |  -  | 0.4287|
 | CNN | 0.3770 | 0.2809 | 0.2798 |
-
-#### Spanish
-
-| Model | Precision | Recall | F1-score |
-|------:|:----------|:-------|:---------|
+| BiLSTM |  0.3252 | 0.3182 |  0.3187|
+| BiLSTM + Attention | **0.3505**  | **0.3353** | **0.3378** |
 
 
 ### Usage
@@ -53,16 +49,16 @@ pip install -r requirements.txt
 python tweet_data.py
 ```
 
-3. Read pretrained embeddings and serialize only those in the vocabulary:
+3. Download the pretrained embeddings available [here](https://github.com/cbaziotis/ntua-slp-semeval2018#2---download-our-pre-trained-word-embeddings). Load the pretrained embeddings and serialize only those in the vocabulary by running
 
 ```sh
 python embeddings.py
 ```
 
-4. Train a simple LSTM classifier:
+4. Train and search hyperparameters for a biLSTM:
 
 ```sh
-python lstm.py
+python attn_lstm.py
 ```
 
 5. Monitor training with Tensorboard by running (in the same directory)
@@ -72,3 +68,5 @@ tensorboard --logdir=runs
 ```
 
 and going to [http://localhost:6006](http://localhost:6006)
+
+Data analysis, model evaluation and other experiments can be found in the [notebooks](notebooks) folder.
