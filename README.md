@@ -1,4 +1,4 @@
-## Comparing different Neural NLP models for the SemEval 2018 Task 2: Multilingual Emoji Prediction
+## Addicted to #avocado toast :heart_eyes: Comparing different Neural NLP models for Emoji Prediction
 
 This project was conducted for the *Deep Learning for Natural Language Technologies* course of the Universiteit van Amsterdam's
 Master Artificial Intelligence program during the winter term 2018/2019.
@@ -33,6 +33,25 @@ library, which supplies Twitter-specific tools for text normalization.
 | CNN | 0.3490| 0.2851 | 0.2903 |
 | BiLSTM |  0.3252 | 0.3182 |  0.3187|
 | BiLSTM + Attention | **0.3505**  | **0.3353** | **0.3378** |
+
+
+#### Error analysis
+
+![Scores by class](./img/results_per_class.png)
+
+Here we can see that the model appears to performs best for the most frequently appearing classes like
+ :heart: and :joy: as well as for very distinct classes like :us: and :christmas_tree:. 
+ Variants of the red heart like :two_hearts:, :purple_heart: and :blue_heart: perform relatively worse. 
+ Moreover, the model seems to struggle with different nuances of facial expressions like :blush:, :grin:, :sunglasses:, 
+ :kissing_heart: or :stuck_out_tongue_winking_eye:. However, they are *not* being confused, as this confusion matrix shows:
+ 
+![Confusion](./img/confusion_matrix.png)
+
+The only confusions that occur are the mix-up of the two camera-relatex emojis :camera: and :camera: with a flash as well 
+as :heart: and :sunny:, where, most remarkably, it is apparent that the sun emoji is not mixed up with any other specific 
+label, which suggests a distinct usage. :stuck_out_tongue_winking_eye: can be seen to be consistently mislabelled as 
+other emojis, which explains its low performance.
+
 
 
 ### Usage

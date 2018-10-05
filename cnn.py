@@ -73,11 +73,12 @@ class CNNClassifier(nn.Module):
         out = self.linear(c)
 
         return out
+
+
 # num filters
 # pretrained or not
 # num linear layers
 # dropout
-
 if __name__ == "__main__":
     # Load data sets~
     root_dir = "."
