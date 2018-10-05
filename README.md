@@ -52,7 +52,7 @@ as :heart: and :sunny:, where, most remarkably, it is apparent that the sun emoj
 label, which suggests a distinct usage. :stuck_out_tongue_winking_eye: can be seen to be consistently mislabelled as
 other emojis, which explains its low performance.
 
-![Attention](./img/attention.png)
+![Attention](./img/attention_emoji.png)
 
 This image give an example of how our best model uses attention: In order to correctly classify the tweet with :christmas_tree:,
 it focuses on related vocabulary in the tweet like "christmas", "deals" and to some lesser extend also words like "tin" and "receive".
